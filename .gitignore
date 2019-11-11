@@ -1,0 +1,13 @@
+/bin
+/exe
+/units
+/backup
+/unused
+*.bak
+*.dof
+*.dsk
+*.exe
+*.dll
+*.so
+@build*.bat
+*.tlb
