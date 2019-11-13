@@ -4,7 +4,8 @@ unit micextables;
 
 interface
 
-uses  windows, sysutils, classes,
+uses  {$ifdef MSWINDOWS} Windows, {$endif}
+      sysutils, classes,
       servertypes, serverapi, sortedlist, classregistration,
       MTETypes, MTEApi, MTEUtils, 
       micexglobal, micexfldidx, micexint, micexthreads, micexstats, micexsubst;

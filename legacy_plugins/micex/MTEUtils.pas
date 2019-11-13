@@ -2,7 +2,7 @@ unit MTEUtils;
 
 interface
 
-uses  windows, sysutils;
+uses  sysutils;
 
 const openTableComplete = true;
       openTablePartial  = false;
@@ -10,7 +10,7 @@ const openTableComplete = true;
 function  TimeAsStr(Value: Integer): ansistring;
 function  DateAsStr(Value: Integer): ansistring;
 
-procedure DecodeMicexTime(Value: longint; var hour, minute, second: Word; var fraction: UINT);
+procedure DecodeMicexTime(Value: longint; var hour, minute, second: Word; var fraction: cardinal);
 procedure DecodeMicexDate(Value: longint; var year: Smallint; var month, day: Word);
 
 function  MicexTimeToDateTime(Value: longint): TDateTime;
@@ -78,7 +78,7 @@ begin
   FmtStr(Result, '%.4d-%.2d-%.2d', [Y, M, D]);
 end;
 
-procedure DecodeMicexTime(Value: longint; var hour, minute, second: Word; var fraction: UINT);
+procedure DecodeMicexTime(Value: longint; var hour, minute, second: Word; var fraction: cardinal);
 var H, M, S: Integer;
 begin
   H := EDivMod(Value, 10000, M);
@@ -97,7 +97,7 @@ end;
 
 function  MicexTimeToDateTime(Value: longint): TDateTime;
 var hour, minute, second : word;
-    fraction             : UINT;
+    fraction             : cardinal;
 begin
   DecodeMicexTime(Value, hour, minute, second, fraction);
   result:= EncodeTime(hour, minute, second, 0);

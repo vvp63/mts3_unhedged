@@ -4,7 +4,8 @@ unit  micexint;
 
 interface
 
-uses  windows, sysutils,
+uses  {$ifdef MSWINDOWS} Windows, {$endif}
+      sysutils,
       MTETypes, MTEApi,
       micexglobal, micexfldidx, micexthreads,
       servertypes, sortedlist;
@@ -86,27 +87,9 @@ type  tTableDescriptor = class(tSortedList)
        property    parser: tBufParser read fParser;
       end;
 
-function max(x, y: cardinal): cardinal;
-function min(x, y: cardinal): cardinal;
 function intpower(base, exponent: cardinal): cardinal;
 
 implementation
-
-function min; register; assembler;
-asm
-         cmp     eax,edx
-         jl      @@max01
-         mov     eax,edx
-@@max01:
-end;
-
-function max; register; assembler;
-asm
-         cmp     eax,edx
-         jg      @@max01
-         mov     eax,edx
-@@max01:
-end;
 
 function intpower;
 var i : cardinal;
@@ -125,11 +108,9 @@ begin
 end;
 
 destructor tBufParser.destroy;
-var tmp : pointer;
 begin
   fsize:= 0;
-  tmp:= pointer(InterlockedExchange(longint(fbuffer), 0));
-  if assigned(tmp) then freemem(tmp);
+  if assigned(fbuffer) then freemem(fbuffer);
   inherited destroy;
 end;
 

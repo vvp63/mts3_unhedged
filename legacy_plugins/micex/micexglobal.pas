@@ -4,8 +4,9 @@ unit micexglobal;
 
 interface
 
-uses  Windows, SysUtils, Math, 
-      LowLevel, {UnixTime, }SortedList,
+uses  {$ifdef MSWINDOWS} windows, {$endif}
+      sysutils, math,
+      LowLevel, SortedList,
       ServerAPI, ServerTypes,
       micexsubst;
 
@@ -61,7 +62,8 @@ const setorderflag       : boolean       = false;
 
 var   Server_API         : tServerAPI;
 
-const pluginpath         : string        = '';
+const pluginfilename     : ansistring    = '';
+      pluginfilepath     : ansistring    = '';
 
 procedure MicexLog(const event: string); overload;
 procedure MicexLog(const event: string; const params: array of const); overload;
@@ -71,7 +73,9 @@ procedure MicexSynchronizeTime(amicextime: tDateTime);
 function ExtractDivider(const alevel: tLevel; const acode: tCode): cardinal; overload;
 function ExtractDivider(const alevel: tLevel; const acode: tCode; var alotsize: cardinal): cardinal; overload;
 
+{$ifdef MSWINDOWS}
 function GetModuleName(Module: HMODULE): string;
+{$endif}
 
 implementation
 
@@ -139,11 +143,15 @@ begin if assigned(Server_API.LogEvent) then Server_API.LogEvent(pChar(format('MI
 
 
 procedure MicexSynchronizeTime(amicextime: tDateTime);
+{$ifdef MSWINDOWS}
 var systime : TSystemTime;
+{$endif}
 begin
+  {$ifdef MSWINDOWS}
   amicextime:= amicextime + (synchourdelta / 24);
   DateTimeToSystemTime(amicextime, systime);
   SetLocalTime(systime);
+  {$endif}
 end;
 
 
@@ -172,9 +180,11 @@ begin
   except on e:exception do begin result:= 1; alotsize:= 1; end; end;
 end;
 
+{$ifdef MSWINDOWS}
 function GetModuleName(Module: HMODULE): string;
 var ModName: array[0..MAX_PATH] of char;
 begin SetString(Result, ModName, GetModuleFileName(Module, ModName, SizeOf(ModName))); end;
+{$endif}
 
 initialization
 {$ifdef UseSecList}

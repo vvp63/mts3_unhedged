@@ -12,8 +12,10 @@
 {__$DEFINE UseSecList}
 {$DEFINE usefastmm4}
 
-{$ifndef FPC}
+{$ifdef FPC}
+  {$mode DELPHI}
   {$undef usefastmm4}
   {$undef useexceptionhandler}
+{$else}
+  {$define MSWINDOWS}
 {$endif}
-

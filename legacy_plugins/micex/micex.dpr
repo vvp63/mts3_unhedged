@@ -6,10 +6,14 @@ library micex;
 
 uses {$ifdef useexceptionhandler} ExcHandler, {$endif}
      {$ifdef usefastmm4} FastMM4, {$endif}
-     windows, classes, sysutils, inifiles,
-     servertypes, serverapi, versioncontrol, classregistration,
-     MTEApi, 
+     {$ifdef MSWINDOWS} windows, versioncontrol, {$endif}
+     classes, sysutils, inifiles,
+     servertypes, serverapi, classregistration,
+     MTEApi,
      micexint, micextables, micexglobal, micexthreads, micexstats, micexorderqueue, micexsubst;
+
+const  PLUGIN_ERROR                     = 0;
+       PLUGIN_OK                        = 1;
 
 function  Init(memmgr: pMemoryManager): longint;                                       cdecl; forward;
 function  Done: longint;                                                               cdecl; forward;
@@ -97,16 +101,33 @@ end;
 { plugin functions }
 
 function Init;
+{$ifdef MSWINDOWS}
 const ver : TFileVersionInfo = ( major: 0; minor: 0; release: 0; build: 0);
+{$endif}
 begin
+  if not assigned(conn_list) then conn_list:= tConnList.Create;
+  {$ifdef MSWINDOWS}
+  pluginfilepath:= includetrailingbackslash(extractfilepath(GetModuleName(hInstance)));
   ExtractVersionInfo(ver);
   micexlog('MICEX plugin version %d.%d [%d]', [ver.major, ver.minor, ver.build]);
+  {$else}
+  micexlog('MICEX plugin');
+  {$endif}
   result:= 0;
+end;
+
+function  InitEx(aexeinstance, alibinstance: HModule; alibname, ainifilename: pAnsiChar): longint; stdcall;
+begin
+  pluginfilename := expandfilename(alibname);
+  pluginfilepath := includetrailingbackslash(extractfilepath(pluginfilename));
+
+  result:= PLUGIN_OK;
 end;
 
 function Done;
 begin
   if connected then Disconnect;
+  if assigned(conn_list) then freeandnil(conn_list);
   result:= 0;
 end;
 
@@ -134,7 +155,7 @@ begin
   if not connected then begin
     micexlog('Starting MICEX');
 
-    inifile:= tIniFile.Create(format('%s\%s', [pluginpath, cfgname]));
+    inifile:= tIniFile.Create(format('%s\%s', [pluginfilepath, cfgname]));
     with inifile do try
       EnableStatsCollector((readinteger('common', 'stats', 0) <> 0));
 
@@ -368,24 +389,14 @@ begin
   result     := @plugapi;
 end;
 
-procedure DllHandler(reason: longint);
-begin
-  case reason of
-    DLL_PROCESS_ATTACH : begin
-                           pluginpath:= includetrailingbackslash(extractfilepath(GetModuleName(hInstance)));
-                           conn_list:= tConnList.Create;
-                         end;
-    DLL_PROCESS_DETACH : begin
-                           if assigned(conn_list) then freeandnil(conn_list);
-                         end;
-  end;
-end;
-
-
-exports getDllAPI;
+exports getDllAPI name 'getDllAPI',
+        InitEX    name 'plg_initialize_ex';
 
 begin
   IsMultiThread:= true;
-  DllProc:= @DllHandler;
-  DllHandler(DLL_PROCESS_ATTACH);
+  {$ifdef FPC}
+  DefaultFormatSettings.DecimalSeparator:= '.';
+  {$else}
+  DecimalSeparator:= '.';
+  {$endif}
 end.

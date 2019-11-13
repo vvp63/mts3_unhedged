@@ -15,7 +15,7 @@ unit MTEApi;
 interface
 
 uses
-  {$ifdef MSWINDOWS}Windows,{$endif}SysUtils, mteTypes;
+  {$ifdef MSWINDOWS}Windows,{$endif}SysUtils, MTETypes;
 
 type
   TMTESrlAddOn = (msaExecTransIP, msaGetExtData, msaConnStats, msaConnStatus,

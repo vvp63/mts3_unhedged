@@ -4,7 +4,8 @@ unit micexthreads;
 
 interface
 
-uses  windows, classes, sysutils, inifiles,
+uses  {$ifdef MSWINDOWS} Windows, {$endif}
+      classes, sysutils, inifiles, math,
       servertypes, sortedlist, threads, syncobj,
       MTETypes, MTEApi,
       micexglobal, micexorderqueue;
@@ -144,7 +145,11 @@ begin
 
   fBoards:= tBoardRegistry.create;
 
+  {$ifdef FPC}
+  InitCriticalSection(ConCsect);
+  {$else}
   InitializeCriticalSection(ConCsect);
+  {$endif}
 
   tablelist:= tTableDescList.Create;
   alivechecker:= 0;
@@ -174,7 +179,11 @@ begin
 
   if assigned(tablelist) then freeandnil(tablelist);
 
+  {$ifdef FPC}
+  DoneCriticalSection(ConCsect);
+  {$else}
   DeleteCriticalSection(ConCsect);
+  {$endif}
 
   if assigned(fBoards) then freeandnil(fBoards);
   if assigned(fSleeper) then freeandnil(fSleeper);
@@ -192,7 +201,7 @@ function tConnectionThread.getconnectionstring(const aSection, aIniItem: string)
 var cname : string;
 begin
   setlength(result, 0);
-  cname:= format('%s\%s', [pluginpath, cfgname]);
+  cname:= format('%s\%s', [pluginfilepath, cfgname]);
   if fileexists(cname) then begin
     with tIniFile.create(cname) do try
       result     :=     ReadString  (aSection, aIniItem, '');
@@ -211,7 +220,7 @@ var cname : string;
     sl    : tStringList;
 begin
   if assigned(aconnstrings) and (length(aIniItem) > 0) then begin
-    cname:= format('%s\%s', [pluginpath, cfgname]);
+    cname:= format('%s\%s', [pluginfilepath, cfgname]);
     if fileexists(cname) then begin
       sl:= tStringList.create;
       try

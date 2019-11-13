@@ -4,7 +4,9 @@ unit micexorderqueue;
 
 interface
 
-uses  windows, classes, sysutils, inifiles, math,
+uses  {$ifdef MSWINDOWS} windows, {$endif}
+      {$ifdef FPC} syncobjs, {$endif}
+      classes, sysutils, inifiles, math,
       sortedlist, threads, syncobj,
       servertypes, serverapi,
       MTETypes, MTEApi, MTEUtils,
@@ -30,9 +32,15 @@ type  pOrderQueueItem    = ^tOrderQueueItem;
 
 type  tOrdersQueue       = class;
 
+      {$ifdef FPC}
+      TTrsThreadEvent    = TEventObject;
+      {$else}
+      TTrsThreadEvent    = THandle;
+      {$endif}
+
       tTransactionThread = class(tCustomThread)
       private
-        FEvent           : THandle;
+        FEvent           : TTrsThreadEvent;
         FQueue           : tOrdersQueue;
         FThreadCount     : plongint;
         FConnHandle      : longint;
@@ -45,7 +53,7 @@ type  tOrdersQueue       = class;
         procedure   doDropOrder(var QueueItem: tOrderQueueItem);
         procedure   doKeepAlive;
       public
-        constructor create(aconnhandle: longint; var athreadcount: longint; var aevent: THandle; aqueue: tOrdersQueue; const asection: ansistring);
+        constructor create(aconnhandle: longint; var athreadcount: longint; var aevent: TTrsThreadEvent; aqueue: tOrdersQueue; const asection: ansistring);
         destructor  destroy; override;
         procedure   execute; override;
       end;
@@ -56,7 +64,7 @@ type  tOrdersQueue       = class;
 
       tOrdersQueue       = class(tCustomThreadList)
       private
-        FEvReady         : THandle;
+        FEvReady         : TTrsThreadEvent;
         FThreadCount     : longint;
         FTrsThreads      : tTrsThreadList;
         procedure   DropWaitingOrder(var aqueueitem: tOrderQueueItem);
@@ -111,7 +119,7 @@ begin setstring(result, pAnsiChar(@mteerror), min(strlen(pAnsiChar(@mteerror)), 
 
 { tTransactionThread }
 
-constructor tTransactionThread.create(aconnhandle: longint; var athreadcount: longint; var aevent: THandle; aqueue: tOrdersQueue; const asection: ansistring);
+constructor tTransactionThread.create(aconnhandle: longint; var athreadcount: longint; var aevent: TTrsThreadEvent; aqueue: tOrdersQueue; const asection: ansistring);
 var cname: ansistring;
 begin
   inherited create(false);
@@ -129,7 +137,7 @@ begin
   FSetOrderTpl:= '%-12.12s%s%sS%sP%-4.4s%-12.12s%.9d%.10d%-5.5s/%-5.5s/%-8.8s%.12d'
   {$endif}
 
-  cname:= format('%s\%s', [pluginpath, cfgname]);
+  cname:= format('%s\%s', [pluginfilepath, cfgname]);
   if fileexists(cname) then
     with tIniFile.create(cname) do try
       FSetOrderTpl := readstring(asection, 'ORDER_template', FSetOrderTpl);
@@ -308,7 +316,11 @@ begin
   InterLockedIncrement(fThreadCount^);
   try
     while not terminated do begin
+      {$ifdef FPC}
+      FEvent.WaitFor(500);
+      {$else}
       WaitForSingleObject(FEvent, 500);
+      {$endif}
       if not terminated and assigned(FQueue) then
         if FQueue.GetOrderQueueItem(QueueItem) then begin
           repeat
@@ -345,7 +357,11 @@ constructor tOrdersQueue.create;
 begin
   inherited create;
   FThreadCount:= 0;
+  {$ifdef FPC}
+  FEvReady:= TTrsThreadEvent.create(nil, false, false, '');
+  {$else}
   FEvReady:= CreateEvent(nil, False, False, nil);
+  {$endif}
   FTrsThreads:= tTrsThreadList.create;
 end;
 
@@ -354,7 +370,11 @@ var aitem : tOrderQueueItem;
 begin
   if assigned(FTrsThreads) then freeandnil(FTrsThreads);
   while getorderqueueitem(aitem) do DropWaitingOrder(aitem);
+  {$ifdef FPC}
+  if assigned(FEvReady) then freeandnil(FEvReady);
+  {$else}
   if (FEvReady <> 0) then CloseHandle(FEvReady);
+  {$endif}
   inherited destroy;
 end;
 
@@ -384,7 +404,11 @@ begin
     with locklist do try
       add(itm);
     finally unlocklist; end;
+    {$ifdef FPC}
+    FEvReady.SetEvent;
+    {$else}
     SetEvent(FEvReady);
+    {$endif}
     with ares do begin accepted := soUnknown; ExtNumber:= 0; TEReply:= ''; end;
     result:= true;
   end else begin
@@ -410,7 +434,11 @@ begin
     with locklist do try
       add(itm);
     finally unlocklist; end;
+    {$ifdef FPC}
+    FEvReady.SetEvent;
+    {$else}
     SetEvent(FEvReady);
+    {$endif}
     with ares do begin accepted := soAccepted; ExtNumber:= 0; TEReply:= ''; end;
     result:= true;
   end else begin

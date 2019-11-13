@@ -313,6 +313,9 @@ exports   getDllAPI name 'getDllAPI',
 
 begin
   IsMultiThread:= true;
-  decimalseparator := '.';
-
+  {$ifdef FPC}
+  DefaultFormatSettings.DecimalSeparator:= '.';
+  {$else}
+  DecimalSeparator:= '.';
+  {$endif}
 end.
