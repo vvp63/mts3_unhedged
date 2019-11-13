@@ -24,6 +24,7 @@ const opNormal            = $00000000;                       // типы заявок
       opRpsDeal           = $00000020;
       opAuct              = $00000040;
       opRepoDeal          = $00000080;
+      opCCP               = $00000100;
 
 const errNoErrors         = $00;
       errSetOrderOK       = $01;
