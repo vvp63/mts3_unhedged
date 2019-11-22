@@ -34,7 +34,7 @@ type  tSecList           = class(tSortedThreadList)
       end;
 {$endif}
 
-const cfgname            : pChar         = 'micex.ini';
+const cfgname            : ansistring    = 'micex.ini';
       enablestats        : boolean       = false;
 
       synchronizetime    : boolean       = false;
@@ -48,7 +48,7 @@ const cfgname            : pChar         = 'micex.ini';
 
       brokerrefs         : tFilterList   = nil;
 
-      orderbooktable     : string        = 'ORDERBOOK';
+      orderbooktable     : ansistring    = 'ORDERBOOK';
 
 const defaultdelay       : longint       = 50;
                                          

@@ -7,8 +7,12 @@ library micex;
 uses {$ifdef useexceptionhandler} ExcHandler, {$endif}
      {$ifdef usefastmm4} FastMM4, {$endif}
      {$ifdef UNIX} cthreads, {$endif}
-     {$ifdef MSWINDOWS} windows, versioncontrol, {$endif}
-     classes, sysutils, inifiles,
+     classes, sysutils,
+     {$ifdef MSWINDOWS}
+       windows, inifiles, versioncontrol,
+     {$else}
+       baseunix, fclinifiles,
+     {$endif}
      servertypes, serverapi, classregistration,
      MTEApi,
      micexint, micextables, micexglobal, micexthreads, micexstats, micexorderqueue, micexsubst;
@@ -121,6 +125,8 @@ function  InitEx(aexeinstance, alibinstance: HModule; alibname, ainifilename: pA
 begin
   pluginfilename := expandfilename(alibname);
   pluginfilepath := includetrailingbackslash(extractfilepath(pluginfilename));
+  cfgname        := changefileext(alibname, '.ini');
+  micexlog('MICEX config file: %s', [cfgname]);
 
   result:= PLUGIN_OK;
 end;
@@ -140,7 +146,7 @@ var   sl, tl    : tStringList;
       conn      : tConnectionThread;
       tblclass  : tObjectClass;
       tbl       : tObject;
-      secname   : string;
+      secname   : ansistring;
       conndelay : longint;
       inifile   : tIniFile;
       filter_len: longint;
@@ -156,7 +162,7 @@ begin
   if not connected then begin
     micexlog('Starting MICEX');
 
-    inifile:= tIniFile.Create(format('%s\%s', [pluginfilepath, cfgname]));
+    inifile:= tIniFile.Create(cfgname);
     with inifile do try
       EnableStatsCollector((readinteger('common', 'stats', 0) <> 0));
 

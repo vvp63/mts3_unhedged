@@ -8,8 +8,12 @@ unit  micexsubst;
 
 interface
 
-uses  {$ifdef MSWINDOWS} windows, {$endif}
-      classes, sysutils, inifiles,
+uses  {$ifdef MSWINDOWS}
+        windows, inifiles,
+      {$else}
+        fclinifiles,
+      {$endif}
+      classes, sysutils, 
       sortedlist;
 
 type  pSubstPair = ^tSubstPair;

@@ -4,7 +4,7 @@ unit micextables;
 
 interface
 
-uses  {$ifdef MSWINDOWS} Windows, {$endif}
+uses  {$ifdef MSWINDOWS} windows, {$endif}
       sysutils, classes,
       servertypes, serverapi, sortedlist, classregistration,
       MTETypes, MTEApi, MTEUtils, 
@@ -1089,6 +1089,7 @@ begin
   if (comparetext(TableName, 'ORDERBOOK') = 0)     then TableParams:= '                ' else
   if (comparetext(TableName, 'EXT_ORDERBOOK') = 0) then TableParams:= '                  ';
   deleteditems:= tStringList.create;
+  deleteditems.sorted:= True;
 end;
 
 destructor tKotirovkiTable.destroy;

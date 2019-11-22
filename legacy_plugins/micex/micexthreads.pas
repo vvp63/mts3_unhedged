@@ -4,8 +4,12 @@ unit micexthreads;
 
 interface
 
-uses  {$ifdef MSWINDOWS} Windows, {$endif}
-      classes, sysutils, inifiles, math,
+uses  {$ifdef MSWINDOWS}
+        windows, inifiles,
+      {$else}
+        fclinifiles,
+      {$endif}
+      classes, sysutils, math,
       servertypes, sortedlist, threads, syncobj,
       MTETypes, MTEApi,
       micexglobal, micexorderqueue;
@@ -31,9 +35,9 @@ type  tTableDescList    = class(tCustomThreadList)
 type  tConnectionThread = class(tCustomThread)
       private
         fmax_tries      : longint;
-        fSection        : string;
-        fConIniItem     : string;
-        fTrsIniItem     : string;
+        fSection        : ansistring;
+        fConIniItem     : ansistring;
+        fTrsIniItem     : ansistring;
         fBoards         : tBoardRegistry;
         fConnected      : boolean;
         fSleeper        : tPreciseSleeper;
@@ -49,16 +53,16 @@ type  tConnectionThread = class(tCustomThread)
 
         OrdersQueue     : tOrdersQueue;
 
-        connectionname  : string;
+        connectionname  : ansistring;
 
         property    delayinterval: longint write fSetDelayInterval;
       protected
-        function    getconnectionstring(const aSection, aIniItem: string): string;
-        procedure   getconnectionstringlist(const aSection, aIniItem: string; aconnstrings: tStringList);
-        function    CreateConnection(const aconnectionstring: string; csect: pRTLCriticalSection): longint;
+        function    getconnectionstring(const aSection, aIniItem: ansistring): ansistring;
+        procedure   getconnectionstringlist(const aSection, aIniItem: ansistring; aconnstrings: tStringList);
+        function    CreateConnection(const aconnectionstring, aconnectionid: ansistring; csect: pRTLCriticalSection): longint;
         procedure   DeleteConnection(var aconnection: longint; csect: pRTLCriticalSection);
       public
-        constructor create(const aSection, aConIniItem, aTrsIniItem: string; adelay: longint);
+        constructor create(const aSection, aConIniItem, aTrsIniItem: ansistring; adelay: longint);
         destructor  destroy; override;
 
         procedure   connect; virtual;
@@ -78,7 +82,7 @@ uses micexint;
 
 { common functions }
 
-procedure advancedreplace(var init: string; const old, new: string);
+procedure advancedreplace(var init: ansistring; const old, new: ansistring);
 var ps : longint;
 begin
   repeat
@@ -197,13 +201,11 @@ begin
   if assigned(fSleeper) then fSleeper.interval:= ainterval;
 end;
 
-function tConnectionThread.getconnectionstring(const aSection, aIniItem: string): string;
-var cname : string;
+function tConnectionThread.getconnectionstring(const aSection, aIniItem: ansistring): ansistring;
 begin
   setlength(result, 0);
-  cname:= format('%s\%s', [pluginfilepath, cfgname]);
-  if fileexists(cname) then begin
-    with tIniFile.create(cname) do try
+  if fileexists(cfgname) then begin
+    with tIniFile.create(cfgname) do try
       result     :=     ReadString  (aSection, aIniItem, '');
       fmax_tries := max(ReadInteger ('connections', 'max_tries', 1), 1);
     finally free; end;
@@ -214,17 +216,16 @@ begin
   end;
 end;
 
-procedure tConnectionThread.getconnectionstringlist(const aSection, aIniItem: string; aconnstrings: tStringList);
-var cname : string;
+procedure tConnectionThread.getconnectionstringlist(const aSection, aIniItem: ansistring; aconnstrings: tStringList);
+var cname : ansistring;
     i     : longint;
     sl    : tStringList;
 begin
   if assigned(aconnstrings) and (length(aIniItem) > 0) then begin
-    cname:= format('%s\%s', [pluginfilepath, cfgname]);
-    if fileexists(cname) then begin
+    if fileexists(cfgname) then begin
       sl:= tStringList.create;
       try
-        with tIniFile.create(cname) do try
+        with tIniFile.create(cfgname) do try
           fmax_tries := max(ReadInteger ('connections', 'max_tries', 1), 1);
           if sectionexists(aSection) then begin
             readsection(aSection, sl);
@@ -244,7 +245,7 @@ begin
   end;
 end;
 
-function tConnectionThread.CreateConnection(const aconnectionstring: string; csect: pRTLCriticalSection): longint;
+function tConnectionThread.CreateConnection(const aconnectionstring, aconnectionid: ansistring; csect: pRTLCriticalSection): longint;
 var err : TMTEErrorMsg;
     i   : longint;
 begin
@@ -255,9 +256,9 @@ begin
     try
       i:= 0;
       while (i < fmax_tries) and (result < MTE_OK) do begin
-        result:= MTEConnect(pChar(aconnectionstring), @err);
-        if (result < MTE_OK) then micexlog('try: %d connection opened: %d Reply: %s', [i, result, trim(err)])
-                             else micexlog('try: %d connection opened successfully.', [i]);
+        result:= MTEConnect(pAnsiChar(aconnectionstring), @err);
+        if (result < MTE_OK) then micexlog('try: %d connection %s opened: %d Reply: %s', [i, aconnectionid, result, trim(err)])
+                             else micexlog('try: %d connection %s opened successfully.', [i, aconnectionid]);
         inc(i);
       end;
     finally if assigned(csect) then LeaveCriticalSection(csect^); end;
@@ -278,15 +279,15 @@ procedure tConnectionThread.connect;
 var sl : tStringList;
     i  : longint;
 begin
-  Disconnect;
   try
-    if (datconnection < MTE_OK) then datconnection:= CreateConnection(getconnectionstring(fSection, fConIniItem), @ConCsect);
+    Disconnect;
+    if (datconnection < MTE_OK) then datconnection:= CreateConnection(getconnectionstring(fSection, fConIniItem), connectionname, @ConCsect);
     if assigned(OrdersQueue) then begin
       sl:= tStringList.create;
       try
         getconnectionstringlist(fSection, fTrsIniItem, sl);
         for i:= 0 to sl.count - 1 do
-          OrdersQueue.AddTransactionConnection(CreateConnection(sl[i], nil), fSection);
+          OrdersQueue.AddTransactionConnection(CreateConnection(sl[i], format('%s/trs%d', [connectionname, i]), nil), fSection);
       finally sl.free; end;
     end;
     fConnected:= (datconnection >= MTE_OK);
@@ -308,8 +309,8 @@ begin result:= assigned(fBoards) and fBoards.boardexists(alevel); end;
 procedure tConnectionThread.execute;
 var i, errcode : longint;
 begin
-  Connect;
   try
+    Connect;
     while not terminated do begin
       if assigned(fSleeper) then fSleeper.reset;
       if not terminated and (datconnection >= MTE_OK) and assigned(tablelist) then begin
@@ -329,6 +330,7 @@ begin
         inc(alivechecker);
       end;
     end;
+    micexlog('CONNECTION: %s terminated!', [connectionname]);
   except on e:exception do micexlog('CONNECTION: %s Exception: %s', [connectionname, e.message]); end;
 end;
 

@@ -4,9 +4,13 @@ unit micexorderqueue;
 
 interface
 
-uses  {$ifdef MSWINDOWS} windows, {$endif}
+uses  {$ifdef MSWINDOWS}
+        windows, inifiles,
+      {$else}
+        fclinifiles,
+      {$endif}
       {$ifdef FPC} syncobjs, {$endif}
-      classes, sysutils, inifiles, math,
+      classes, sysutils, math,
       sortedlist, threads, syncobj,
       servertypes, serverapi,
       MTETypes, MTEApi, MTEUtils,
@@ -137,9 +141,8 @@ begin
   FSetOrderTpl:= '%-12.12s%s%sS%sP%-4.4s%-12.12s%.9d%.10d%-5.5s/%-5.5s/%-8.8s%.12d'
   {$endif}
 
-  cname:= format('%s\%s', [pluginfilepath, cfgname]);
-  if fileexists(cname) then
-    with tIniFile.create(cname) do try
+  if fileexists(cfgname) then 
+    with tIniFile.create(cfgname) do try
       FSetOrderTpl := readstring(asection, 'ORDER_template', FSetOrderTpl);
       cname        := readstring(asection, 'CCPBoards',      '');
       if (length(cname) > 0) then begin

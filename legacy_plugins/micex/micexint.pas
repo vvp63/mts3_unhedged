@@ -145,7 +145,7 @@ begin
   result:= #0;
   if assigned(fbuffer) then
     if (foffset - 1 <= fbuffer^.DataLen - 1) then begin
-      result:= char(pAnsiChar(@fbuffer^.data)[foffset]);
+      result:= char(fbuffer^.data[foffset]);
       inc(foffset);
     end;
 end;
@@ -155,7 +155,7 @@ begin
   result:= 0;
   if assigned(fbuffer) then
     if (foffset - 1 <= fbuffer^.DataLen - 4) then begin
-      system.move(pAnsiChar(@fbuffer^.data)[foffset], result, 4);
+      system.move(fbuffer^.data[foffset], result, 4);
       inc(foffset, 4);
     end;
 end;
@@ -166,7 +166,7 @@ begin
   if assigned(fbuffer) and (len > 0) then
     if (foffset - 1 <= fbuffer^.DataLen - len) then begin
       setlength(result, len);
-      move(pAnsiChar(@fbuffer^.data)[foffset], result[1], len);
+      move(fbuffer^.data[foffset], result[1], len);
       inc(foffset, len);
     end;
 end;
@@ -177,7 +177,7 @@ begin
   if assigned(fbuffer) and (len > 0) then
     if (foffset - 1 <= fbuffer^.DataLen - len - ofs) then begin
       setlength(result, len);
-      move(pAnsiChar(@fbuffer^.data)[foffset + ofs], result[1], len);
+      move(fbuffer^.data[foffset + ofs], result[1], len);
     end;
 end;
 

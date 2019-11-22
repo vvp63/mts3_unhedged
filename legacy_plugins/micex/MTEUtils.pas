@@ -1,3 +1,9 @@
+{$ifdef FPC}
+  {$mode DELPHI}
+{$else}
+  {$define MSWINDOWS}
+{$endif}
+
 unit MTEUtils;
 
 interface

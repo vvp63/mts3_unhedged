@@ -5,7 +5,7 @@ unit micexstats;
 interface
 
 uses  {$ifdef MSWINDOWS} windows, {$endif}
-      sysutils, inifiles,
+      sysutils, 
       lowlevel, sortedlist,
       servertypes,
       micexglobal;
