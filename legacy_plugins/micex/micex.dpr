@@ -99,6 +99,7 @@ end;
 function Connected: boolean;
 var cnt : longint;
 begin
+  cnt:= 0;
   if assigned(conn_list) then conn_list.Get(0, cnt) else cnt:= 0;
   result:= (cnt > 0);
 end;

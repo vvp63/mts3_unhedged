@@ -15,12 +15,12 @@ uses  {$ifdef UNIX}
 
 implementation
 
-{$ifndef UNIX}
 var ResSet : ULONG;
 
 initialization
+  {$ifndef UNIX}
   IsMultiThread:= true;
   NtSetTimerResolution(5000, true, @ResSet);
-{$endif}
+  {$endif}
 
 end.

@@ -80,8 +80,10 @@ end;
 
 function Done: longint;
 begin
-  FinalizeTerminalSupport;
-  log('Terminal support shutdown complete...');
+  try
+    FinalizeTerminalSupport;
+    log('Terminal support shutdown complete...');
+  except on e: exception do log('Terminal support shutdown exception: %s', [e.message]); end;
   result:= 0;
 end;
 
@@ -154,5 +156,10 @@ exports   getDllAPI,
           InitEX    name 'plg_initialize_ex';
 
 begin
-  decimalseparator:= '.'; timeseparator:= ':';
+  {$ifdef FPC}
+  DefaultFormatSettings.DecimalSeparator:= '.';
+  DefaultFormatSettings.TimeSeparator:= ':';
+  {$else}
+  DecimalSeparator:= '.'; timeseparator:= ':';
+  {$endif}
 end.

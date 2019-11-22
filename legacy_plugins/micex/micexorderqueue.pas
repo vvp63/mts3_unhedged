@@ -141,7 +141,7 @@ begin
   FSetOrderTpl:= '%-12.12s%s%sS%sP%-4.4s%-12.12s%.9d%.10d%-5.5s/%-5.5s/%-8.8s%.12d'
   {$endif}
 
-  if fileexists(cfgname) then 
+  if fileexists(cfgname) then
     with tIniFile.create(cfgname) do try
       FSetOrderTpl := readstring(asection, 'ORDER_template', FSetOrderTpl);
       cname        := readstring(asection, 'CCPBoards',      '');
@@ -310,7 +310,7 @@ begin
       MTEAddTable(FConnHandle, FKeepAliveHandle, 0);
       MTERefresh(FConnHandle, heap);
     end;
-  except on e: exception do micexlog('EXECTRANS: Exception: %s', [e.message]); end;
+  except on e: exception do micexlog('KeepAlive: Exception: %s', [e.message]); end;
 end;
 
 procedure tTransactionThread.execute;

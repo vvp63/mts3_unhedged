@@ -74,12 +74,12 @@ type  tTableDescriptor = class(tSortedList)
        procedure   registerboard(const alevel: tLevel);
 
        function    getstructure:longint;
-       procedure   processfield(uniindex:longint; const value:array of const); virtual; abstract;
-       function    open:longint; virtual; abstract;
-       function    update:longint; virtual; abstract;
+       procedure   processfield(uniindex:longint; const value:array of const); virtual; 
+       function    open:longint; virtual;
+       function    update:longint; virtual;
        function    close:longint; virtual;
        procedure   processfields(const fieldslist: tFieldNums; adevider: longint);
-       function    getfieldbyname(const name: string; const fieldslist: tFieldNums):string;
+       function    getfieldbyname(const name: ansistring; const fieldslist: tFieldNums):ansistring;
 
        property    fields[idx:longint]:pointer read getitem;
        property    linkhandle: longint read getlinkhandle;
@@ -304,6 +304,15 @@ begin
   except on e:exception do micexlog('Exception: %s', [e.message]); end;
 end;
 
+procedure tTableDescriptor.processfield(uniindex:longint; const value:array of const);
+begin end;
+
+function tTableDescriptor.open:longint;
+begin result:= MTE_TSMR; end;
+
+function tTableDescriptor.update:longint; 
+begin result:= MTE_TSMR; end;
+
 function tTableDescriptor.close;
 begin
   if (linkhandle >= MTE_OK) and (handle >= MTE_OK) then begin
@@ -369,7 +378,7 @@ begin
   end;
 end;
 
-function tTableDescriptor.getfieldbyname;
+function tTableDescriptor.getfieldbyname(const name: ansistring; const fieldslist: tFieldNums):ansistring;
  var itm    : tFieldDesc;
      idx    : longint;
      ofs    : cardinal;

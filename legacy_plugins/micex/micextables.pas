@@ -1065,9 +1065,7 @@ begin
             transaction := 0;  // транзакции нет, заявка "порождается" торговой площадкой
             orderno     := 0;  // заявки тоже нет
           end;
-          //$IFDEF LogTradesUpdates
           if opened then with trd do micexlog('REPOTrade: %s\%d\%d\%s', [clientid,tradeno,orderno,account]);
-          //$ENDIF
           {$ifdef UseSetOrderFlag}if not setorderflag and (tradebuf.count = 0) then begin{$endif}
             if not aadd then try
               if assigned(Server_API.TradesBeginUpdate) then Server_API.TradesBeginUpdate(micexId, '');

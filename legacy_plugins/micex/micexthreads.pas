@@ -251,14 +251,17 @@ var err : TMTEErrorMsg;
 begin
   result:= -1;
   if (length(aconnectionstring) > 0) then begin
-    fillchar(err, sizeof(TMTEErrorMsg), 0);
     if assigned(csect) then EnterCriticalSection(csect^);
     try
       i:= 0;
       while (i < fmax_tries) and (result < MTE_OK) do begin
+        fillchar(err, sizeof(err), 0);
         result:= MTEConnect(pAnsiChar(aconnectionstring), @err);
-        if (result < MTE_OK) then micexlog('try: %d connection %s opened: %d Reply: %s', [i, aconnectionid, result, trim(err)])
-                             else micexlog('try: %d connection %s opened successfully.', [i, aconnectionid]);
+        if (result >= MTE_OK) then begin
+          fillchar(err, sizeof(err), 0);
+          MTEExecTrans(result, 'CHANGE_LANGUAGE', 'E', @err);
+          micexlog('try: %d connection %s opened successfully.', [i, aconnectionid]);
+        end else micexlog('try: %d connection %s opened: %d Reply: %s', [i, aconnectionid, result, trim(err)]);
         inc(i);
       end;
     finally if assigned(csect) then LeaveCriticalSection(csect^); end;

@@ -9,7 +9,7 @@ unit  sockobjects;
 interface
 
 uses  {$ifdef MSWINDOWS}
-        windows, winsock2,
+        windows, winsock2, 
       {$else}
         baseunix, linux, sockets, termio,
       {$endif}
@@ -37,6 +37,12 @@ const SD_SEND                 = 1;
 const INVALID_SOCKET          = TSocket(not(0));
 {$endif}
 
+{$ifdef FPC}
+type  TFIONBIO                = longint;
+{$else}
+type  TFIONBIO                = DWORD;
+{$endif}
+
 type  tSocketState            = (ss_online, ss_closed, ss_error);
 
 type  tCustomSocket           = class;
@@ -46,6 +52,10 @@ type  tCustomSocket           = class;
         fDestroying           : boolean;
         {$ifdef MSWINDOWS}
         FFDSet                : TFDSet;
+        FFDRset               : TFDset;
+        FFDWset               : TFDset;
+        FFDEset               : TFDset;
+        ftmval                : TTimeVal;
         {$else}
         FEpollHndl            : TSocket;
         FEventBuffer          : pEventList;
@@ -59,6 +69,8 @@ type  tCustomSocket           = class;
       public
         constructor create; virtual;
         destructor  destroy; override;
+
+        procedure   CleanupSocketList;
 
         procedure   CleanupClients(asocket: tCustomSocket);
         procedure   idle; virtual;
@@ -157,7 +169,8 @@ type  tCustomSocket           = class;
         property    clientsocketclass: tClientSocketClass write fSocketClass;
       end;
 
-procedure InitializeSocketIO(asocklistclass: tSocketObjectListClass);
+procedure InitializeSocketIO(asocklistclass: tSocketObjectListClass = nil);
+procedure CleanupSocketIO;
 function  ProcessSocketIO: boolean;
 procedure FinalizeSocketIO;
 
@@ -171,10 +184,7 @@ var   GInitData               : TWSADATA;
 
 {$ifdef MSWINDOWS}
 procedure FD_COPY(var src, dest: TFDSet);
-begin
-  dest.fd_count:= src.fd_count;
-  system.move(src.fd_array, dest.fd_array, src.fd_count * sizeof(TSocket));
-end;
+begin system.move(src, dest, sizeof(TFDSet)); end;
 {$endif}
 
 { tObjectList }
@@ -201,6 +211,16 @@ begin
   if assigned(FEventBuffer) then freemem(FEventBuffer);
   {$endif}
   inherited destroy;
+end;
+
+procedure tSocketObjectList.CleanupSocketList;
+var i  : integer;
+    cs : tCustomSocket;
+begin
+  for i:= count - 1 downto 0 do begin
+    cs:= tCustomSocket(items[i]);
+    if assigned(cs) then cs.free;
+  end;
 end;
 
 function tSocketObjectList.fGetSocket(ahandle: TSocket): tCustomSocket;
@@ -243,41 +263,35 @@ begin
 end;
 
 function tSocketObjectList.poll(atimeout: longint): longint;
-{$ifdef MSWINDOWS}
-var fdrset  : TFDset;
-    fdwset : TFDset;
-    fdeset : TFDset;
-    tm     : TTimeVal;
-{$endif}
 var i      : longint;
     cs     : tCustomSocket;
 begin
   {$ifdef MSWINDOWS}
-  FD_COPY(FFDSet, fdrset);
-  FD_COPY(FFDSet, fdeset);
+  FD_COPY(FFDSet, ffdrset);
+  FD_COPY(FFDSet, ffdeset);
 
-  FD_ZERO(fdwset);
+  FD_ZERO(ffdwset);
   for i:= 0 to count - 1 do begin
     cs:= tCustomSocket(items[i]);
     if assigned(cs) then
-      if (cs is tCustomClientSocket) and tCustomClientSocket(cs).datapending then FD_SET(cs.handle, fdwset);
+      if (cs is tCustomClientSocket) and tCustomClientSocket(cs).datapending then FD_SET(cs.handle, ffdwset);
   end;
 
-  TM.tv_sec  := atimeout  div 1000;
-  TM.tv_usec := (atimeout mod 1000) * 1000;
+  ftmval.tv_sec  := atimeout div 1000;
+  ftmval.tv_usec := (atimeout mod 1000) * 1000;
 
-  result:= winsock2.select(0, @fdrset, @fdwset, @fdeset, @tm);
+  result:= winsock2.select(0, @ffdrset, @ffdwset, @ffdeset, @ftmval);
 
-  for i:= 0 to fdrset.fd_count - 1 do begin
-    cs:= sockets[fdrset.fd_array[i]];
+  for i:= 0 to ffdrset.fd_count - 1 do begin
+    cs:= sockets[ffdrset.fd_array[i]];
     if assigned(cs) then begin
       if (cs is tCustomClientSocket) and (tCustomClientSocket(cs).receive = 0) then tCustomClientSocket(cs).free else
       if (cs is tCustomDatagramSocket) and (tCustomDatagramSocket(cs).receive = 0) then tCustomDatagramSocket(cs).free else
       if (cs is tCustomServerSocket) then tCustomServerSocket(cs).accept;
-    end;  
+    end;
   end;
-  for i:= 0 to fdeset.fd_count - 1 do begin
-    cs:= sockets[fdeset.fd_array[i]];
+  for i:= 0 to ffdeset.fd_count - 1 do begin
+    cs:= sockets[ffdeset.fd_array[i]];
     if assigned(cs) then cs.free;
   end;
   {$else}
@@ -290,7 +304,7 @@ begin
           if (cs is tCustomClientSocket) and (tCustomClientSocket(cs).receive = 0) then freeandnil(cs) else
           if (cs is tCustomDatagramSocket) and (tCustomDatagramSocket(cs).receive = 0) then freeandnil(cs) else
           if (cs is tCustomServerSocket) then tCustomServerSocket(cs).accept;
-        end;  
+        end;
         if assigned(cs) and (events and EPOLL_ERRORS <> 0) then freeandnil(cs);
       end;
     end;
@@ -377,11 +391,7 @@ begin
   fSocketClass:= tCustomClientSocket;
   {$ifdef MSWINDOWS}
   handle := winsock2.socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-  {$ifdef FPC}
-    temp:= 1; winsock2.ioctlsocket(handle, longint(FIONBIO), temp);
-  {$else}
-    temp:= 1; winsock2.ioctlsocket(handle, FIONBIO, temp);
-  {$endif}
+  temp:= 1; winsock2.ioctlsocket(handle, TFIONBIO(FIONBIO), temp);
   temp:= 1; winsock2.setsockopt(handle, IPPROTO_TCP, TCP_NODELAY, @temp, sizeof(temp));
   temp:= 1; winsock2.setsockopt(handle, IPPROTO_TCP, SO_REUSEADDR, @temp, sizeof(temp));
   {$else}
@@ -441,11 +451,11 @@ begin
   result:= nil;
   temp:= sizeof(tmpaddr);
   {$ifdef MSWINDOWS}
-  {$ifdef FPC}
+    {$ifdef FPC}
     hsock:= winsock2.accept(handle, @tmpaddr, temp);
-  {$else}
+    {$else}
     hsock:= winsock2.accept(handle, tmpaddr, temp);
-  {$endif}
+    {$endif}
   {$else}
   fillchar(tmpaddr, sizeof(tmpaddr), 0);
   hsock:= fpaccept(handle, @tmpaddr, @temp);
@@ -499,8 +509,13 @@ begin
   fillchar(faddr, sizeof(faddr), 0);
   with faddr do begin
     sin_family := AF_INET;
+    {$ifdef MSWINDOWS}
     if (length(aaddress) > 0) then sin_addr.s_addr:= inet_addr(pAnsiChar(aaddress))
                               else sin_addr.s_addr:= htonl(INADDR_LOOPBACK);
+    {$else}
+    if (length(aaddress) > 0) then sin_addr.s_addr:= StrToNetAddr(pAnsiChar(aaddress)).s_addr
+                              else sin_addr.s_addr:= htonl($7F000001);
+    {$endif}
     sin_port := htons(aport);
   end;
   {$ifdef MSWINDOWS}
@@ -510,7 +525,11 @@ begin
   {$endif}
 
   namelen:= sizeof(faddr);
-  getsockname(handle, faddr, namelen);
+  {$ifdef MSWINDOWS}
+  if (getsockname(handle, faddr, namelen) <> 0) then fillchar(faddr, sizeof(faddr), 0);
+  {$else}
+  if (fpGetSockName(handle, @faddr, @namelen) <> 0) then fillchar(faddr, sizeof(faddr), 0);
+  {$endif}
 end;
 
 function tCustomDatagramSocket.recv(var buffer; bufsize: Integer): longint;
@@ -540,11 +559,7 @@ begin
   handle:= ahandle;
 
   {$ifdef MSWINDOWS}
-  {$ifdef FPC}
-    temp:= 1; winsock2.ioctlsocket(handle, longint(FIONBIO), temp);
-  {$else}
-    temp:= 1; winsock2.ioctlsocket(handle, FIONBIO, temp);
-  {$endif}
+  temp:= 1; winsock2.ioctlsocket(handle, TFIONBIO(FIONBIO), temp);
   temp:= 1; winsock2.setsockopt(handle, IPPROTO_TCP, TCP_NODELAY, @temp, sizeof(temp));
   {$else}
   temp:= 1; fpIOCtl(handle, FIONBIO, @temp);
@@ -605,11 +620,15 @@ begin result:= 0; end;
 procedure InitializeSocketIO(asocklistclass: tSocketObjectListClass);
 begin
   FinalizeSocketIO;
-  if assigned(asocklistclass) then begin
-    GlobalSocketList:= tSocketObjectList(asocklistclass.NewInstance);
-    if assigned(GlobalSocketList) then GlobalSocketList.create;
-  end;
+  if not assigned(GlobalSocketList) then
+    if assigned(asocklistclass) then begin
+      GlobalSocketList:= tSocketObjectList(asocklistclass.NewInstance);
+      if assigned(GlobalSocketList) then GlobalSocketList.create;
+    end else GlobalSocketList:= tSocketObjectList.create;
 end;
+
+procedure CleanupSocketIO;
+begin if assigned(GlobalSocketList) then GlobalSocketList.CleanupSocketList; end;
 
 function ProcessSocketIO: boolean;
 begin
@@ -626,7 +645,7 @@ initialization
   {$ifdef MSWINDOWS}
   WSAStartup(MAKEWORD(2, 0), GInitData);
   {$endif}
-  InitializeSocketIO(tSocketObjectList);
+  InitializeSocketIO;
 
 finalization
   FinalizeSocketIO;

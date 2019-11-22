@@ -440,6 +440,7 @@ type tExtTrsResult = packed record
 var sz     : longint;
     trsres : tExtTrsResult;
 begin
+  fillchar(trsres, sizeof(trsres), 0);
   with trsres.res do begin transaction:= atrs; errcode:= acode; quantity:= aquantity; reserved:= areserved; end;
   sz:= length(amsg);
   if (length(amsg) > 0) then begin
