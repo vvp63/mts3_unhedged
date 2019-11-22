@@ -244,7 +244,7 @@ end;
 
 function tSocketObjectList.poll(atimeout: longint): longint;
 {$ifdef MSWINDOWS}
-var fdset  : TFDset;
+var fdrset  : TFDset;
     fdwset : TFDset;
     fdeset : TFDset;
     tm     : TTimeVal;
@@ -253,7 +253,7 @@ var i      : longint;
     cs     : tCustomSocket;
 begin
   {$ifdef MSWINDOWS}
-  FD_COPY(FFDSet, fdset);
+  FD_COPY(FFDSet, fdrset);
   FD_COPY(FFDSet, fdeset);
 
   FD_ZERO(fdwset);
@@ -266,10 +266,10 @@ begin
   TM.tv_sec  := atimeout  div 1000;
   TM.tv_usec := (atimeout mod 1000) * 1000;
 
-  result:= winsock2.select(0, @fdset, @fdwset, @fdeset, @tm);
+  result:= winsock2.select(0, @fdrset, @fdwset, @fdeset, @tm);
 
-  for i:= 0 to fdset.fd_count - 1 do begin
-    cs:= sockets[fdset.fd_array[i]];
+  for i:= 0 to fdrset.fd_count - 1 do begin
+    cs:= sockets[fdrset.fd_array[i]];
     if assigned(cs) then begin
       if (cs is tCustomClientSocket) and (tCustomClientSocket(cs).receive = 0) then tCustomClientSocket(cs).free else
       if (cs is tCustomDatagramSocket) and (tCustomDatagramSocket(cs).receive = 0) then tCustomDatagramSocket(cs).free else
@@ -277,7 +277,7 @@ begin
     end;  
   end;
   for i:= 0 to fdeset.fd_count - 1 do begin
-    cs:= sockets[fdset.fd_array[i]];
+    cs:= sockets[fdeset.fd_array[i]];
     if assigned(cs) then cs.free;
   end;
   {$else}
