@@ -5,18 +5,20 @@ unit tterm_commandparser;
 interface
 
 uses  {$ifdef MSWINDOWS}
-        windows, messages, 
+        windows, messages,
       {$endif}
       sysutils;
 
-type  tCommandMethod    = function: boolean of object;
+type  tCommandMethod         = function: boolean of object;
 
-type  tCommandInterface = class(tObject)
+type  tCommandInterfaceClass = class of tCommandInterface;
+
+      tCommandInterface      = class(tObject)
       private
-        fcmd        : ansistring;
-        idx         : longint;
-        fquit       : boolean;
-        fmethodname : ansistring;
+        fcmd                 : ansistring;
+        idx                  : longint;
+        fquit                : boolean;
+        fmethodname          : ansistring;
       protected
         function    GetNextChar: ansichar;
         procedure   SkipSpaces;
@@ -24,15 +26,27 @@ type  tCommandInterface = class(tObject)
         function    RestLine: ansistring;
         function    CheckEoln: boolean;
       public
+        constructor create; virtual;
         procedure   processmessagequeue;
         function    processcommand(const acommand: ansistring): boolean; virtual;
         procedure   syntaxerror; virtual;
         property    command: ansistring read fcmd;
       end;
 
+const commandinterface : tCommandInterface = nil;
+
+procedure initcommandinterface(ACommandInterfaceClass: tCommandInterfaceClass);
+
+procedure processmessagehandler; stdcall;
+
 implementation
 
 { tCommandInterface }
+
+constructor tCommandInterface.create;
+begin
+  inherited create;
+end;
 
 function tCommandInterface.CheckEoln: boolean;
 begin SkipSpaces; result:= fquit; end;
@@ -104,5 +118,28 @@ end;
 
 procedure tCommandInterface.syntaxerror;
 begin end;
+
+{ common functions }
+
+procedure initcommandinterface(ACommandInterfaceClass: tCommandInterfaceClass);
+var obj : tObject;
+begin
+  if assigned(commandinterface) then freeandnil(commandinterface);
+  if assigned(ACommandInterfaceClass) then begin
+    obj:= ACommandInterfaceClass.NewInstance;
+    if (obj is tCommandInterface) then begin
+      tCommandInterface(obj).create;
+      commandinterface:= tCommandInterface(obj);
+    end else obj.freeinstance;
+  end;
+end;
+
+procedure processmessagehandler;
+begin if assigned(commandinterface) then commandinterface.processmessagequeue; end;
+
+initialization
+
+finalization
+  if assigned(commandinterface) then freeandnil(commandinterface);
 
 end.

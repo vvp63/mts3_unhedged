@@ -24,6 +24,7 @@ const usrNormal           = $00;                             // нормальный польз
       usrMonitor          = $10;                             // только просмотр без возможности ставить и снимать заявки
       usrRemoteServer     = $20;                             // удаленный сервер
       usrRepoAllowed      = $40;                             // разрешены сделки рпс
+      usrServerAdmin      = $80;                             // администратор сервера
 
 const idMiscData          = $00;                             // not implemented
 
@@ -58,6 +59,7 @@ const idMiscData          = $00;                             // not implemented
       idIndividualLimits  = $1f;
 
       idPing              = $20;
+      idConsoleLog        = $21;
 
       idQueryCon          = $30;                             // remote control only
 //      idUsrChgStatus      = $31;

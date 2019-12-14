@@ -25,6 +25,7 @@ const ev_api  : tEventHandlerAPI = (  evSecArrived     : nil;
                                       evSQLServerEvent : OnSQLCommand;
                                       evUserMessage    : nil;
                                       evTableUpdate    : nil;
+                                      evLogEvent       : nil;
                                       );
 
       stockApi : tStockAPI       = (  stock_count      : 0;

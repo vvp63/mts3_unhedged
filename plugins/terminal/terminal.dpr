@@ -25,6 +25,7 @@ procedure TradesArrived(var trade: tTrades; fields: tTradesSet);           cdecl
 procedure TransactionRes(var aresult: tSetOrderResult);                    cdecl; forward;
 procedure AccountUpdated(var aaccount: tAccount);                          cdecl; forward;
 procedure UserMessage(aFromID, aFromUserName, aText: pAnsiChar);           cdecl; forward;
+procedure LogEvent(aevent: pAnsiChar);                                     cdecl; forward;
 
 const ev_api  : tEventHandlerAPI = (  evSecArrived     : SecArrived;
                                       evAllTrdArrived  : nil;
@@ -36,7 +37,7 @@ const ev_api  : tEventHandlerAPI = (  evSecArrived     : SecArrived;
                                       evSQLServerEvent : nil;
                                       evUserMessage    : UserMessage;
                                       evTableUpdate    : nil;
-                                      );
+                                      evLogEvent       : LogEvent);
 
       plugapi : tDataSourceApi   = (  plugname         : PlugName;
                                       plugflags        : plEventHandler;
@@ -145,6 +146,9 @@ begin
   end;
 end;
 
+procedure LogEvent(aevent: pAnsiChar);
+begin loghandler(aevent); end;
+
 function getDllAPI(srvapi: pServerAPI): pDataSourceAPI; cdecl;
 begin
   server_api:= srvapi;
@@ -152,7 +156,7 @@ begin
   if assigned(server_api) then result:= @plugapi else result:= nil;
 end;
 
-exports   getDllAPI, 
+exports   getDllAPI,
           InitEX    name 'plg_initialize_ex';
 
 begin

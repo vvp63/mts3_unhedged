@@ -13,7 +13,7 @@ uses  {$ifdef MSWINDOWS}
       sockobjects, sortedlist,
       servertypes, serverapi, protodef, proto_in, proto_out, encoders, decoders, queue,
       tterm_api,
-      terminal_common, terminal_server, terminal_client_obj;
+      terminal_common, terminal_classes, terminal_server, terminal_client_obj;
 
 type  tTerminalClient     = class(tTerminalClientSock)
       private
@@ -67,6 +67,7 @@ type  tConnectedClients   = class(tCustomThreadList)
         procedure   freeitem(item: pointer); override;
 
         procedure   broadcast_data(var abuf; aitemid, adatasize: longint);
+        procedure   broadcast_data_masked(var abuf; aitemid, adatasize: longint; ausermask, auserflags: longint);
         procedure   send_data(const aid: tClientID; const auser: tUserName; var abuf; aitemid, adatasize: longint);
         procedure   send_transaction_result(const aid: tClientId; const auser: tUserName;
                                             const atrs: int64; acode: byte; const amsg: shortstring;
@@ -75,6 +76,9 @@ type  tConnectedClients   = class(tCustomThreadList)
       end;
 
 const ConnectedClients    : tConnectedClients = nil;
+      ServerLog           : tThreadStringQueue = nil;
+
+function  loghandler(logstr: pAnsiChar): longint;
 
 implementation
 
@@ -91,6 +95,47 @@ begin
   fpgettimeofday(@t, nil);
   result := (int64(t.tv_sec) * 1000000) + t.tv_usec;
 {$endif}
+end;
+
+function  logstringtoqueue(astr: pAnsiChar; abuf: pAnsiChar; alen: longint): longint;
+const log_id : longint = 0;
+begin
+  inc(log_id); if (log_id < 0) then log_id:= 0;
+  result:= 0;
+  if assigned(abuf) and (alen >= sizeof(longint)) then begin
+    plongint(abuf)^:= log_id;
+    abuf:= strlcopy(abuf + sizeof(longint), astr, alen - sizeof(longint));
+    result:= sizeof(longint) + strlen(abuf);
+  end;
+end;
+
+function  loghandler(logstr: pAnsiChar): longint;
+var buf : array[0..16383] of ansichar;
+    len : longint;
+begin
+  if assigned(logstr) then begin
+    if assigned(ServerLog) then ServerLog.push(logstr);
+    if assigned(ConnectedClients) then begin
+      len:= logstringtoqueue(logstr, @buf, sizeof(@buf));
+      if (len > 0) then ConnectedClients.broadcast_data_masked(buf, idConsoleLog, len, usrServerAdmin, usrServerAdmin);
+    end;
+  end;
+  result:= PLUGIN_OK;
+end;
+
+function term_enumtablerecords(aref: pointer; atable_id, aexpected_recsize: longint; aparams: pAnsiChar; aparamsize: longint; acallback: tEnumerateTableRecFunc): longint;
+var buf    : array[0..16383] of ansichar;
+    i, len : longint;
+begin
+  case atable_id of
+    idConsoleLog : if assigned(acallback) and assigned(ServerLog) then
+                     with ServerLog.locklist do try
+                       for i:= 0 to count - 1 do begin
+                         len:= logstringtoqueue(pAnsiChar(strings[i]), @buf, sizeof(@buf));
+                         acallback(aref, atable_id, @buf, len, aparams, aparamsize);
+                       end;
+                     finally ServerLog.unlocklist; end;
+  end;
 end;
 
 function enumtablerecords_callback(aref: pointer; atable_id: longint; abuf: pAnsiChar; abufsize: longint; aparams: pAnsiChar; aparamsize: longint): longint; stdcall;
@@ -185,6 +230,10 @@ begin
   end;
 
   fAccList.enumerate(on_enumerate_tablerows);
+
+  if (UserFlags and usrServerAdmin = usrServerAdmin) then begin
+    term_enumtablerecords(Self, idConsoleLog, 0, nil, 0, @enumtablerecords_callback);
+  end;
 end;
 
 procedure tTerminalClient.on_message(const aframe: tProtocolRec; amessage: pAnsiChar; amsgsize: Integer);
@@ -416,6 +465,16 @@ begin
   finally unlocklist; end;
 end;
 
+procedure tConnectedClients.broadcast_data_masked(var abuf; aitemid, adatasize: longint; ausermask, auserflags: longint);
+var i : longint;
+begin
+  locklist;
+  try
+    for i:= 0 to count - 1 do with tTerminalClient(items[i]) do
+      if (UserFlags and ausermask = auserflags) then queuedata(abuf, aitemid, adatasize);
+  finally unlocklist; end;
+end;
+
 procedure tConnectedClients.send_data(const aid: tClientID; const auser: tUserName; var abuf; aitemid, adatasize: longint);
 var i : longint;
 begin
@@ -462,8 +521,11 @@ end;
 
 initialization
   ConnectedClients:= tConnectedClients.create;
+  ServerLog:= tThreadStringQueue.create;
+  ServerLog.MaxLen:= 256;
 
 finalization
+  if assigned(ServerLog) then freeandnil(ServerLog);
   if assigned(ConnectedClients) then freeandnil(ConnectedClients);
 
 end.

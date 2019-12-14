@@ -35,6 +35,7 @@ const
   tbl_SetStopOrder     = 'setstop';
   tbl_ReportQuery      = 'repquery';
   tbl_ping             = 'ping';
+  tbl_consolelog       = 'consolelog';
   tbl_AllTradesQuery   = 'atrdquery';
   tbl_TradesQuery      = 'trdquery';
   tbl_DropOrder        = 'droporder';

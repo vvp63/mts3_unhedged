@@ -240,10 +240,11 @@ type  tplgevSecArrived       = procedure (var sec:tSecurities; changedfields:TSe
       tplgevSQLServerEvent   = function (aeventcode, aeventparameter: pAnsiChar; aresulthandle: longint): boolean; cdecl;
       tplgevUserMessage      = procedure (aFromID, aFromUserName, aText: pAnsiChar);                               cdecl;
       tplgevTableUpdate      = procedure (aEventType: longint; astock_id: longint; alevel: tLevel);                cdecl;
+      tplgevLogEvent         = procedure (aevent: pAnsiChar);                                                      cdecl;
 
       pEventHandlerAPI       = ^tEventHandlerAPI;
       tEventHandlerAPI       = record
-       evSecArrived          : tplgevSecArrived;    
+       evSecArrived          : tplgevSecArrived;
        evAllTrdArrived       : tplgevAllTrdArrived;
        evKotirArrived        : tplgevKotirArrived;
        evOrderArrived        : tplgevOrderArrived;
@@ -258,6 +259,8 @@ type  tplgevSecArrived       = procedure (var sec:tSecurities; changedfields:TSe
        evUserMessage         : tplgevUserMessage;
        {события обновления таблиц}
        evTableUpdate         : tplgevTableUpdate;
+       {лог сервера}
+       evLogEvent            : tplgevLogEvent;
       end;
 
 type  tplgInit               = function  (memorymanager:pMemoryManager):longint;                                   cdecl;

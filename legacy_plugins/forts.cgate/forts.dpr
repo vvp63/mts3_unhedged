@@ -68,7 +68,9 @@ const fortsapi : tStockAPI      = ( stock_count       : stockcount;
                                     plugflags         : plStockProvider;
                                     pl_Init           : Init;
                                     pl_Done           : Done;
-                                    stockapi          : @fortsapi);
+                                    stockapi          : @fortsapi;
+                                    newsAPI           : nil;
+                                    eventAPI          : nil);
 
 
 type  tCmdInterface     = class(tCommandInterface)

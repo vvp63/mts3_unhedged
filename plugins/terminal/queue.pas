@@ -46,7 +46,7 @@ begin
 end;
 
 function tQueue.compare;
-var a,b : pointer;
+var a, b : pAnsiChar;
 begin
   result:= pQueueData(item1)^.id - pQueueData(item2)^.id;
   if (result = 0) then begin
@@ -94,6 +94,7 @@ begin
         idStopOrder        : result:= cmpi64(pStopOrders(a)^.stopid, pStopOrders(b)^.stopid);
         idNews             : result:= pNewsHeader(a)^.id - pNewsHeader(b)^.id;
         idPing             : result:= plongint(a)^ - plongint(b)^;
+        idConsoleLog       : result:= plongint(a)^ - plongint(b)^;
         idClientLimits     : begin
                                result:= comparetext(pClientLimitItem(a)^.limit.account, pClientLimitItem(b)^.limit.account);
                                if (result = 0) then begin

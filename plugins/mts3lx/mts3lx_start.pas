@@ -91,6 +91,7 @@ const
                                     evSQLServerEvent  : nil; //MTS_SQLServerEvent;
                                     evUserMessage     : MTS_UserMessage;
                                     evTableUpdate     : nil;
+                                    evLogEvent        : nil;
                                   );
 
 

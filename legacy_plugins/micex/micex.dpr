@@ -55,13 +55,16 @@ const stocklst : tMicexStockLst = ((stock_id          : micexId;
                                     ev_AfterDayClose  : nil;
                                     ev_OrderCommit    : OrderCommit;
                                     ev_ServerStatus   : nil;
-                                    pl_MoveOrder      : nil;);
+                                    pl_MoveOrder      : nil;
+                                    pl_DropOrderEx    : nil);
 
       plugapi  : tDataSourceAPI = ( plugname          : micexplugname;
                                     plugflags         : plStockProvider;
                                     pl_Init           : Init;
                                     pl_Done           : Done;
-                                    stockapi          : @micexapi);
+                                    stockapi          : @micexapi;
+                                    newsAPI           : nil;
+                                    eventAPI          : nil);
 
 var   conn_list  : tConnList         = nil;
 

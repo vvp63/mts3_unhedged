@@ -10,7 +10,7 @@ uses  {$ifdef MSWINDOWS}
         baseunix,
       {$endif}
       classes, sysutils,
-      tterm_api, tterm_common, tterm_utils;
+      tterm_api, tterm_legacy_apis, tterm_common, tterm_utils, tterm_classes;
 
 {$ifndef MSWINDOWS}
 const INVALID_HANDLE_VALUE= -1;
@@ -19,8 +19,6 @@ const INVALID_HANDLE_VALUE= -1;
 const MaximumBufferSize   = 65535;
 
 const log_date_format     = 'yyyy-mm-dd hh":"nn":"ss"."zzz';
-
-type  tWriteLogHandler    = function (logstr: pAnsiChar): longint; stdcall;
 
 type  tLogBuffer          = class(tMemoryStream)
       private
@@ -43,15 +41,15 @@ type  tLogBuffer          = class(tMemoryStream)
         procedure   stop; virtual;
       end;
 
-const WriteLogHandler  : tWriteLogHandler = nil;
-      logbuffer        : tLogBuffer       = nil;
-
 const deflogname       : ansistring       = 'tterm.log';
 
 procedure legacy_logevent(aevent: pAnsiChar); cdecl;
 
 function  writelog(logstr: pAnsiChar): boolean; stdcall;
 procedure writeexceptionlog(buffer: pAnsiChar; BufferSize: Integer; CallStack, Registers, CustomInfo: pAnsiChar); stdcall;
+
+function  iswriteloghandlerset: boolean;
+function  setwriteloghandler(anewhandler: tWriteLogHandler): tWriteLogHandler; stdcall;
 
 function  log(const logstr: ansistring): boolean; overload;
 function  log(const logstr: ansistring; const params: array of const): boolean; overload;
@@ -60,7 +58,13 @@ procedure log_start; stdcall;
 procedure log_flush; stdcall;
 procedure log_stop; stdcall;
 
+procedure processeventlogger;
+
 implementation
+
+const WriteLogHandler  : tWriteLogHandler   = nil;
+      logbuffer        : tLogBuffer         = nil;
+      logtable         : tThreadStringQueue = nil;
 
 { tLogBuffer }
 
@@ -145,7 +149,14 @@ procedure tLogBuffer.flush;
 begin
   if not isEmpty then try
     if (FLogHandle = INVALID_HANDLE_VALUE) then OpenLogFile(deflogname);
-    if (FLogHandle <> INVALID_HANDLE_VALUE) then FileWrite(FLogHandle, memory^, position);
+    if (FLogHandle <> INVALID_HANDLE_VALUE) then begin
+      FileWrite(FLogHandle, memory^, position);
+      {$ifdef FPC}
+      FileFlush(FLogHandle);
+      {$else}
+      FlushFileBuffers(FLogHandle);
+      {$endif}
+    end;
   finally position:= 0; end;
 end;
 
@@ -183,6 +194,9 @@ begin
       logbuffer.log(crlf, 2);
     finally logbuffer.unlock; end;
   end;
+
+  if assigned(logtable) then logtable.push(buf);
+
   if assigned(WriteLogHandler) then WriteLogHandler(pAnsiChar(buf));
   result:= true;
 end;
@@ -211,10 +225,21 @@ begin
     finally unlock; end;
   end;
 
+  if assigned(logtable) then logtable.push(buf);
+
   if assigned(WriteLogHandler) then begin
     WriteLogHandler(pAnsiChar(buf));
     WriteLogHandler(buffer);
   end;
+end;
+
+function  iswriteloghandlerset: boolean;
+begin result:= assigned(WriteLogHandler); end;
+
+function  setwriteloghandler(anewhandler: tWriteLogHandler): tWriteLogHandler;
+begin
+  result:= WriteLogHandler;
+  WriteLogHandler:= anewhandler;
 end;
 
 // вывод в лог
@@ -252,18 +277,39 @@ begin
   end;
 end;
 
+procedure processeventlogger;
+var logstr : ansistring;
+    res    : boolean;
+    i      : longint;
+begin
+  if assigned(logtable) then
+    repeat
+      logstr:= logtable.pop(res);
+      if res then begin
+        for i:= 0 to event_apis_count - 1 do
+          if assigned(event_apis[i]) then with event_apis[i]^ do
+            if assigned(evLogEvent) then evLogEvent(pAnsiChar(logstr));
+      end;
+    until not res;
+  if (GetTickCount mod 500 = 0) then log_flush;  
+end;
+
 exports
-  legacy_logevent name 'srvLogEvent',
-  writelog        name SRV_WriteLog,
-  log_start       name SRV_StartLog,
-  log_flush       name SRV_FlushLog,
-  log_stop        name SRV_StopLog;
+  legacy_logevent    name 'srvLogEvent',
+  setwriteloghandler name SRV_SetWriteLogHandler,
+  writelog           name SRV_WriteLog,
+  log_start          name SRV_StartLog,
+  log_flush          name SRV_FlushLog,
+  log_stop           name SRV_StopLog;
 
 initialization
   deflogname:= format('%s%s', [ExeFilePath, ChangeFileExt(ExeFileName, '.log')]);
   logbuffer:= tLogBuffer.create;
+  logtable:= tThreadStringQueue.create;
+  logtable.MaxLen:= 100;
 
 finalization
+  if assigned(logtable) then freeandnil(logtable);
   if assigned(logbuffer) then freeandnil(logbuffer);
 
 end.

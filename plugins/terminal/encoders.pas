@@ -194,6 +194,13 @@ type  tPingEncoder        = class(tEncoderStream)
         procedure   encoderow(item: pAnsiChar; datasize: longint); override;
       end;
 
+const ConsoleLogNames      : array [0..0] of pAnsiChar =
+      ( fld_Message );
+
+type  tConsoleLogEncoder   = class(tEncoderStream)
+        procedure   generatedescriptor; override;
+        procedure   encoderow(item: pAnsiChar; datasize: longint); override;
+      end;
 
 const ClientLimitNames    : array[0..10] of pAnsiChar =
       ( fld_Account,         fld_Stock_ID,         fld_Code,             fld_OldLimit,         fld_StartLimit,
@@ -885,7 +892,31 @@ begin
   StopEncode(nil);
 end;
 
-procedure tPingEncoder.encoderow(item: pAnsiChar; datasize: longint); 
+procedure tPingEncoder.encoderow(item: pAnsiChar; datasize: longint);
+const dm : byte = 1;
+begin
+  if assigned(item) then begin
+    inc(frame.rowcount);
+    write(dm,sizeof(byte));
+    writevalue([pAnsiChar(item + sizeof(longint))]);
+  end;
+end;
+
+// -------------------------------------------------------------------
+
+procedure tConsoleLogEncoder.generatedescriptor;
+var   i         : longint;
+const tableid   : byte  = idConsoleLog;
+      tablename : pAnsiChar = tbl_consolelog;
+begin
+  StartEncode(idTableDescr);
+  write(tableid, sizeof(byte));
+  write(tablename^,strlen(tablename)+1);
+  for i:= low(ConsoleLogNames) to high(ConsoleLogNames) do write(ConsoleLogNames[i]^, strlen(ConsoleLogNames[i]) + 1);
+  StopEncode(nil);
+end;
+
+procedure tConsoleLogEncoder.encoderow(item: pAnsiChar; datasize: longint);
 const dm : byte = 1;
 begin
   if assigned(item) then begin
@@ -1252,6 +1283,7 @@ begin
           idNews             : aenc := tNewsEncoder.create        (minimum_compression_size, fbuffer);
           idLevelList        : aenc := tLevelListEncoder.create   (minimum_compression_size, fbuffer);
           idPing             : aenc := tPingEncoder.create        (minimum_compression_size, nil);
+          idConsoleLog       : aenc := tConsoleLogEncoder.create  (minimum_compression_size, fbuffer);
           idClientLimits     : aenc := tClientLimitEncoder.create (minimum_compression_size, fbuffer);
           idAccountRests     : aenc := tAccRestsEncoder.create    (minimum_compression_size, fbuffer);
           idFirmInfo         : aenc := tFirmInfoEncoder.create    (minimum_compression_size, fbuffer);

@@ -43,6 +43,7 @@ const stockAPI : tStockAPI        = ( stock_count      : 0;
                                       evSQLServerEvent : nil;
                                       evUserMessage    : nil;
                                       evTableUpdate    : onTablesUpdate;
+                                      evLogEvent       : nil;
                                      );
 
       plugApi : tDataSourceApi   = (  plugname         : PlugName;

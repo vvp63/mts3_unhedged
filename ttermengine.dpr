@@ -8,7 +8,7 @@ uses  tterm_sys,
       {$ifdef MSWINDOWS}
         windows, activex, inifiles, versioncontrol,
       {$else}
-        baseunix, fclinifiles, crt,
+        baseunix, fclinifiles,
       {$endif}
       sysutils,
       tterm_api, tterm_common, tterm_console, tterm_pluginsupport, tterm_logger,
@@ -30,7 +30,6 @@ type  tCmdInterface     = class(tCommandInterface)
         function    exit: boolean;
         function    quit: boolean;
         function    bye: boolean;
-        function    help: boolean;
         function    log: boolean;
         function    hook: boolean;
         function    connect: boolean;
@@ -45,7 +44,6 @@ const exeversion          : TFileVersionInfo  = ( major: 0; minor: 0; release: 0
 {$endif}
 
 const server_terminated   : boolean           = false;
-      commandinterface    : tCmdInterface     = nil;
 
 { tCommandInterface }
 
@@ -79,8 +77,6 @@ function tCmdInterface.exit: boolean;
 begin if checkeoln then server_terminated:= true else syntaxerror; result:= true; end;
 function tCmdInterface.quit: boolean; begin result:= self.exit; end;
 function tCmdInterface.bye: boolean; begin result:= self.exit; end;
-function tCmdInterface.help: boolean;
-begin if checkeoln then typehelp else syntaxerror; result:= true; end;
 
 function tCmdInterface.log: boolean;
 var tmp : ansistring;
@@ -211,37 +207,28 @@ begin
   if ((CtrlType >= low(reasons)) and (CtrlType <= high(reasons))) then
     log('shutting down... reason: %s code: %d', [reasons[CtrlType], CtrlType]);
   log_flush;
-  if assigned(commandline) then commandline.executecommand('exit');
+  executeconsolecommand('exit');
 end;
 {$endif}
 
 var   day_open_status : longint = dayWasOpened;
 
 function execute_engine: longint; stdcall;
-var i           : longint;
-    {$ifdef MSWINDOWS}
-    consoleinfo : TConsoleScreenBufferInfo;
-    {$endif}
+var current_command : ansistring;
+    i               : longint;
 begin
   GetMemoryManager(memorymanager);
   {$ifdef MSWINDOWS}
   SetConsoleCtrlHandler(@CtrlHandler, true);
   {$endif}
 
-  {$ifdef MSWINDOWS}
+  {$ifdef FPC}
+  with DefaultFormatSettings do begin DecimalSeparator:= '.'; timeseparator:= ':'; end;
+  {$else}
   decimalseparator:= '.'; timeseparator:= ':';
   {$endif}
 
-  commandinterface:= tCmdInterface.create;
-
-  // set console size
-  {$ifdef MSWINDOWS}
-  SetConsoleScreenBufferSize(GetStdHandle(STD_OUTPUT_HANDLE), consolesize);
-  GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), consoleinfo);
-  consolesize:= consoleinfo.dwSize;
-  {$else}
-  consolesize.x:= WindMaxX; consolesize.y:= WindMaxY;
-  {$endif}
+  initcommandinterface(tCmdInterface);
 
   log('');
   {$ifdef MSWINDOWS}
@@ -287,18 +274,24 @@ begin
       log('Initialization complete');
 
       // execute main program cycle
-      if assigned(commandline) and assigned(commandinterface) then
-        while not server_terminated do
-          commandinterface.processcommand(commandline.readlncommand('>', false, commandinterface.processmessagequeue));
+      if assigned(commandinterface) then
+        while not server_terminated do begin
+          current_command:= getnextconsolecommand(processmessagehandler);
+          if (length(current_command) > 0) then
+             if assigned(commandinterface) then commandinterface.processcommand(current_command);
+          processmessagehandler;
+          processeventlogger;
+          sleep(1);
+        end;
 
       log('Disconnecting plugins...');
-
       // disconnect data source plugins
       for i:= 0 to plugin_apis_count - 1 do
         if assigned(plugin_apis[i]) then with plugin_apis[i]^ do begin
           if (plugflags and plStockProvider <> 0) then with stockAPI^ do begin
             if assigned(pl_Disconnect) then pl_Disconnect;
           end;
+          log_flush;
         end;
 
       if assigned(transaction_registry) then transaction_registry.finalizetransactions;
@@ -312,8 +305,6 @@ begin
   log('Done');
 
   log_flush;
-
-  if assigned(commandinterface) then freeandnil(commandinterface);
 
   result:= plugin_ok;
 end;
@@ -378,6 +369,7 @@ exports
   srvCleanupTrades          name srv_CleanupTrades,
 
   executeconsolecommand     name SRV_ExecuteConsoleCommand,
+  readconsolecommandex      name SRV_ReadConsoleCommandEx,
   readconsolecommand        name SRV_ReadConsoleCommand,
   legacy_readconsolecommand name 'srvReadBuf',
 

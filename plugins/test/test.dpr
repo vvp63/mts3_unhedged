@@ -36,6 +36,7 @@ const ev_api  : tEventHandlerAPI = (  evSecArrived     : nil;
                                       evSQLServerEvent : nil;
                                       evUserMessage    : UserMessage;
                                       evTableUpdate    : nil;
+                                      evLogEvent       : nil;
                                     );
 
       plugApi : tDataSourceApi   = (  plugname         : PlugName;
@@ -90,7 +91,7 @@ end;
 
 { other plugin functions }
 
-function  Init(aexeinstance: longint; ainifilename: pChar): longint; stdcall;
+function  Init(aexeinstance: HModule; ainifilename: pChar): longint; stdcall;
 begin
   cmdintf:= tCmdInterface.create;
 
