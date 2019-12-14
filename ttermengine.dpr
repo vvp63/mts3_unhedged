@@ -211,6 +211,12 @@ begin
 end;
 {$endif}
 
+procedure idlehandler; stdcall;
+begin
+  processmessagehandler;
+  processeventlogger;
+end;
+
 var   day_open_status : longint = dayWasOpened;
 
 function execute_engine: longint; stdcall;
@@ -276,11 +282,10 @@ begin
       // execute main program cycle
       if assigned(commandinterface) then
         while not server_terminated do begin
-          current_command:= getnextconsolecommand(processmessagehandler);
+          current_command:= getnextconsolecommand(idlehandler);
           if (length(current_command) > 0) then
              if assigned(commandinterface) then commandinterface.processcommand(current_command);
-          processmessagehandler;
-          processeventlogger;
+          idlehandler;
           sleep(1);
         end;
 

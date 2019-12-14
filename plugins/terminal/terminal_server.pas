@@ -53,13 +53,13 @@ type  tTerminalClientSock = class(tCustomClientSocket)
 
         fClientInfo       : tClientInfo;
         fHandshakeMsg     : tHandshakeMsg;
+        fUserFlags        : longint;
 
         fuser_pass        : ansistring;
 
         fnewdecoder       : boolean;
 
         function    fGetClientName: ansistring;
-        function    fGetUserFlags: longint;
         function    fGetIniFile: tIniFile;
       protected
         in_buf            : tClientStream;
@@ -93,7 +93,7 @@ type  tTerminalClientSock = class(tCustomClientSocket)
 
         property    ClientInfo: tClientInfo read fClientInfo;
         property    ClientName: ansistring read fGetClientName;
-        property    UserFlags: longint read fGetUserFlags;
+        property    UserFlags: longint read fUserFlags write fUserFlags;
         property    NewDecoder: boolean read fnewdecoder;
         property    IniFile: tIniFile read fGetIniFile;
       end;
@@ -220,9 +220,6 @@ end;
 
 function tTerminalClientSock.fGetClientName: ansistring;
 begin with ClientInfo do result:= format('%s@%s', [id, username]); end;
-
-function tTerminalClientSock.fGetUserFlags: longint;
-begin result:= fHandshakeMsg.userflags; end;
 
 function tTerminalClientSock.fGetIniFile: tIniFile;
 begin if assigned(serversocket) then result:= tTerminalServer(serversocket).inifile else result:= nil; end;
@@ -355,6 +352,8 @@ begin
 
                                  with fClientInfo, version do
                                    fnewdecoder:= not (((major = 2) and (minor = 0) and (build = 0)) or ((major = 1) and (minor = 0)));
+
+                                 fUserFlags:= fHandshakeMsg.userflags;
 
                                  on_client_login;
                                end;

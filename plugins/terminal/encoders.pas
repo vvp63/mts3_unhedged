@@ -898,7 +898,7 @@ begin
   if assigned(item) then begin
     inc(frame.rowcount);
     write(dm,sizeof(byte));
-    writevalue([pAnsiChar(item + sizeof(longint))]);
+    writevalue([plongint(item)^]);
   end;
 end;
 
@@ -922,7 +922,7 @@ begin
   if assigned(item) then begin
     inc(frame.rowcount);
     write(dm,sizeof(byte));
-    writevalue([plongint(item)^]);
+    writevalue([pAnsiChar(item + sizeof(longint))]);
   end;
 end;
 

@@ -37,7 +37,7 @@ const commandinterface : tCommandInterface = nil;
 
 procedure initcommandinterface(ACommandInterfaceClass: tCommandInterfaceClass);
 
-procedure processmessagehandler; stdcall;
+procedure processmessagehandler; 
 
 implementation
 
