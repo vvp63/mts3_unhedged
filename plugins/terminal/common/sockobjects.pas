@@ -255,7 +255,7 @@ begin
                                  FD_SET(handle, FFDSet);
                                  {$else}
                                  tmpsz:= (count div epoll_size_delta + 1) * epoll_size_delta * sizeof(EPoll_Event);
-                                 if (FEventBufferSize < tmpsz then
+                                 if (FEventBufferSize < tmpsz) then begin
                                    reallocmem(FEventBuffer, tmpsz);
                                    FEventBufferSize:= tmpsz;
                                  end;  
