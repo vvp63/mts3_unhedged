@@ -11,7 +11,7 @@ uses  {$ifdef MSWINDOWS}
       {$endif}
       {$ifdef FPC} syncobjs, {$endif}
       classes, sysutils, math,
-      sortedlist, threads, syncobj,
+      sortedlist, custom_threads, syncobj,
       servertypes, serverapi,
       MTETypes, MTEApi, MTEUtils,
       micexglobal, micexsubst;

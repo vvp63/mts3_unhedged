@@ -11,7 +11,7 @@ uses  {$ifdef MSWINDOWS}
         threadmsg,
       {$endif}
       classes, sysutils, inifiles, math,
-      classregistration, threads, sortedlist, syncobj,
+      classregistration, custom_threads, sortedlist, syncobj,
       servertypes,
       cgate, gateobjects,
       forts_types, forts_common, forts_transactions, forts_streams, forts_tables, forts_directory;

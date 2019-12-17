@@ -5,7 +5,7 @@ interface
 uses  {$ifdef MSWINDOWS}
         windows,
       {$endif}
-      sysutils, threads, sortedlist, servertypes,
+      sysutils, custom_threads, sortedlist, servertypes,
       mts3lx_common;
 
 type  tQueueType  = (ev_type_order, ev_type_trade, ev_type_soresult,

@@ -10,7 +10,7 @@ uses  {$ifdef MSWINDOWS}
         fclinifiles,
       {$endif}
       classes, sysutils, math,
-      servertypes, sortedlist, threads, syncobj,
+      servertypes, sortedlist, custom_threads, syncobj,
       MTETypes, MTEApi,
       micexglobal, micexorderqueue;
 

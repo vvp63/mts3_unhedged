@@ -10,7 +10,7 @@ uses  {$ifdef MSWINDOWS}
         fclinifiles,
       {$endif}
       classes, sysutils,
-      threads, sockobjects,
+      custom_threads, sockobjects,
       terminal_common, terminal_server, terminal_client;
 
 type  tTerminalThread = class(tCustomThread)
@@ -28,6 +28,7 @@ implementation
 
 procedure tTerminalThread.execute;
 begin
+  freeonterminate:= false;
   try
     if assigned(GlobalSocketList) then GlobalSocketList.polltimeout:= 10;
 

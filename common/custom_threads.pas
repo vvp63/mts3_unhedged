@@ -4,7 +4,7 @@
   {$define MSWINDOWS}
 {$endif}
 
-unit threads;
+unit custom_threads;
 
 interface
 
