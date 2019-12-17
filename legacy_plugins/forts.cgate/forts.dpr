@@ -9,9 +9,7 @@ library forts;
 {$R *.res}
 
 uses {$ifdef useexceptionhandler} ExcHandler, {$endif}
-     {$ifdef UNIX}
-       cthreads,
-     {$endif}
+     {$ifdef UNIX} cmem, cthreads, {$endif}
      {$ifdef MSWINDOWS}
        windows, activex, inifiles, versioncontrol,
      {$else}

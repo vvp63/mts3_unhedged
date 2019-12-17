@@ -28,7 +28,6 @@ implementation
 
 procedure tTerminalThread.execute;
 begin
-  freeonterminate:= false;
   try
     if assigned(GlobalSocketList) then GlobalSocketList.polltimeout:= 10;
 

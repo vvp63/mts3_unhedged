@@ -5,8 +5,7 @@ unit  terminal_sys;
 interface
 
 uses  {$ifdef UNIX}
-        {$ifdef use_cmem} cmem, {$endif}
-        {$ifndef no_multi_thread} cthreads, {$endif}
+        cmem, cthreads,
       {$else}
         windows,
         {$ifdef use_fastmm4} FastMM4, {$endif}

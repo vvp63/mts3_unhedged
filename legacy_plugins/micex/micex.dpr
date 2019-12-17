@@ -6,7 +6,7 @@ library micex;
 
 uses {$ifdef useexceptionhandler} ExcHandler, {$endif}
      {$ifdef usefastmm4} FastMM4, {$endif}
-     {$ifdef UNIX} cthreads, {$endif}
+     {$ifdef UNIX} cmem, cthreads, {$endif}
      classes, sysutils,
      {$ifdef MSWINDOWS}
        windows, inifiles, versioncontrol,
