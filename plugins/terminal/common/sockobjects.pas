@@ -35,6 +35,8 @@ const EPOLLRDHUP              = $2000;
 const SD_SEND                 = 1;
 
 const INVALID_SOCKET          = TSocket(not(0));
+
+const epoll_size_delta        = 128;
 {$endif}
 
 {$ifdef FPC}
@@ -59,6 +61,7 @@ type  tCustomSocket           = class;
         {$else}
         FEpollHndl            : TSocket;
         FEventBuffer          : pEventList;
+        FEventBufferSize      : cardinal;
         {$endif}
         FPollTimeout          : longint;
 
@@ -197,8 +200,9 @@ begin
   {$ifdef MSWINDOWS}
   FD_ZERO(FFDSet);
   {$else}
-  FEpollHndl:= epoll_create(128);
+  FEpollHndl:= epoll_create(epoll_size_delta);
   FEventBuffer:= nil;
+  FEventBufferSize:= 0;
   {$endif}
 end;
 
@@ -240,6 +244,9 @@ begin
 end;
 
 procedure tSocketObjectList.Notify(Ptr: Pointer; Action: TListNotification);
+{$ifndef MSWINDOWS}
+var tmpsz : longint;
+{$endif}
 begin
   if assigned(ptr) then with tCustomSocket(ptr) do
     case Action of
@@ -247,7 +254,11 @@ begin
                                  {$ifdef MSWINDOWS}
                                  FD_SET(handle, FFDSet);
                                  {$else}
-                                 reallocmem(FEventBuffer, count * sizeof(EPoll_Event));
+                                 tmpsz:= (count div epoll_size_delta + 1) * epoll_size_delta * sizeof(EPoll_Event);
+                                 if (FEventBufferSize < tmpsz then
+                                   reallocmem(FEventBuffer, tmpsz);
+                                   FEventBufferSize:= tmpsz;
+                                 end;  
                                  epoll_ctl(FEpollHndl, EPOLL_CTL_ADD, handle, EpollEvent);
                                  {$endif}
                                end;
