@@ -20,7 +20,11 @@ const MaximumBufferSize   = 65535;
 
 const log_date_format     = 'yyyy-mm-dd hh":"nn":"ss"."zzz';
 
+{$ifdef enable_log_buffer}
 type  tLogBuffer          = class(tMemoryStream)
+{$else}
+type  tLogBuffer          = class(tObject)
+{$endif}
       private
         FLogging          : boolean;
         FLogHandle        : tHandle;
@@ -78,7 +82,9 @@ begin
   {$endif}
   FLogHandle:= INVALID_HANDLE_VALUE;
   FLogging:= {$ifdef filelog} true {$else} false {$endif} ;
+  {$ifdef enable_log_buffer}
   setsize(MaximumBufferSize + 1024);
+  {$endif}
 end;
 
 destructor tLogBuffer.destroy;
@@ -104,19 +110,33 @@ end;
 
 function tLogBuffer.isEmpty: boolean;
 begin
+  {$ifdef enable_log_buffer}
   result:= (position = 0);
+  {$else}
+  result:= true;
+  {$endif}
 end;
 
 procedure tLogBuffer.log(alogstring: pAnsiChar; alength: longint);
 begin
+  {$ifdef enable_log_buffer}
   if flogging and (alength > 0) then write(alogstring^, alength);
   if (position > MaximumBufferSize) then flush;
+  {$else}
+  if (FLogHandle = INVALID_HANDLE_VALUE) then OpenLogFile(deflogname);
+  if (FLogHandle <> INVALID_HANDLE_VALUE) then FileWrite(FLogHandle, alogstring^, alength);
+  {$endif}
 end;
 
 procedure tLogBuffer.log(const alogstring: ansistring);
 begin
+  {$ifdef enable_log_buffer}
   if flogging and (length(alogstring) > 0) then write(alogstring[1], length(alogstring));
   if (position > MaximumBufferSize) then flush;
+  {$else}
+  if (FLogHandle = INVALID_HANDLE_VALUE) then OpenLogFile(deflogname);
+  if (FLogHandle <> INVALID_HANDLE_VALUE) then FileWrite(FLogHandle, alogstring[1], length(alogstring));
+  {$endif}
 end;
 
 function tLogBuffer.OpenLogFile(const alogname: ansistring): longint;
@@ -147,17 +167,21 @@ end;
 
 procedure tLogBuffer.flush;
 begin
+  {$ifdef enable_log_buffer}
   if not isEmpty then try
     if (FLogHandle = INVALID_HANDLE_VALUE) then OpenLogFile(deflogname);
     if (FLogHandle <> INVALID_HANDLE_VALUE) then begin
       FileWrite(FLogHandle, memory^, position);
-      {$ifdef FPC}
-      FileFlush(FLogHandle);
-      {$else}
-      FlushFileBuffers(FLogHandle);
-      {$endif}
     end;
   finally position:= 0; end;
+  {$endif}
+  if (FLogHandle <> INVALID_HANDLE_VALUE) then begin
+    {$ifdef FPC}
+    FileFlush(FLogHandle);
+    {$else}
+    FlushFileBuffers(FLogHandle);
+    {$endif}
+  end;
 end;
 
 procedure tLogBuffer.start;
@@ -282,6 +306,7 @@ var logstr : ansistring;
     res    : boolean;
     i      : longint;
 begin
+  res:= false;
   if assigned(logtable) then
     repeat
       logstr:= logtable.pop(res);
@@ -291,7 +316,11 @@ begin
             if assigned(evLogEvent) then evLogEvent(pAnsiChar(logstr));
       end;
     until not res;
-  if (GetTickCount mod 500 = 0) then log_flush;  
+  {$ifdef FPC}
+  if (GetTickCount64 mod 500 = 0) then log_flush;
+  {$else}
+  if (GetTickCount mod 500 = 0) then log_flush;
+  {$endif}
 end;
 
 exports
@@ -304,7 +333,9 @@ exports
 
 initialization
   deflogname:= format('%s%s', [ExeFilePath, ChangeFileExt(ExeFileName, '.log')]);
+
   logbuffer:= tLogBuffer.create;
+
   logtable:= tThreadStringQueue.create;
   logtable.MaxLen:= 100;
 

@@ -48,10 +48,7 @@ const ev_api  : tEventHandlerAPI = (  evSecArrived     : SecArrived;
                                       eventapi         : @ev_api);
 
 function Init(memmgr: pMemoryManager): longint;
-begin
-  log('Terminal support started ok', []);
-  result:= 0;
-end;
+begin result:= 0; end;
 
 function  InitEx(aexeinstance, alibinstance: HModule; alibname, ainifilename: pAnsiChar): longint; stdcall;
 const section_system = 'system';
@@ -75,16 +72,20 @@ begin
 
   InitializeTerminalSupport;
 
+  log('Terminal support started ok', []);
+
   result:= PLUGIN_OK;
 end;
 
 
 function Done: longint;
 begin
+  log('terminal done being called...');
   try
     FinalizeTerminalSupport;
     log('Terminal support shutdown complete...');
   except on e: exception do log('Terminal support shutdown exception: %s', [e.message]); end;
+  log('terminal done ok!');
   result:= 0;
 end;
 

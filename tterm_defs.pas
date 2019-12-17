@@ -11,5 +11,5 @@
 {$define tterm}
 {$define debuglog}
 {$define filelog}
-{$define enable_log_buffer}
+{__$define enable_log_buffer}
 

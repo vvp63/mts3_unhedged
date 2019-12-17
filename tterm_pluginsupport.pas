@@ -68,8 +68,8 @@ begin
         if assigned(done) then done();
       end;
       log_flush;
-      sleep(1000);
     finally
+      log('unloading library: [%d]', [libhandle]);
       freelibrary(libhandle);
       log('library [%d] unloaded', [libhandle]);
       log_flush;
@@ -214,7 +214,7 @@ var i : longint;
   type pHModule = ^HModule;
   begin
     if assigned(buf) then begin
-      dec(len, sizeof(longint));
+      dec(len, sizeof(HModule));
       if (len >= 0) then begin pHModule(buf)^:= avalue; inc(pAnsiChar(buf), sizeof(HModule)); end;
     end;
   end;
@@ -234,7 +234,7 @@ var i : longint;
   type ppointer = ^pointer;
   begin
     if assigned(buf) then begin
-      dec(len, sizeof(longint));
+      dec(len, sizeof(pointer));
       if (len >= 0) then begin ppointer(buf)^:= avalue; inc(pAnsiChar(buf), sizeof(pointer)); end;
     end;
   end;

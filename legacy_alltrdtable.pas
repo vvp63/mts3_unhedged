@@ -117,6 +117,7 @@ var itm    : tATRegistryItem;
     idx    : longint;
     newitm : pATRegistryItem;
 begin
+  fillchar(itm, sizeof(itm), 0);
   with itm.boardid do begin stock_id:= struc.stock_id; level:= struc.level; end;
   if not search(@itm, idx) then begin
     newitm:= new(pATRegistryItem);
@@ -152,6 +153,7 @@ function tAllTradesRegistry.storagebyalltrade(const aalltrade: tAllTrades; var i
 var itm    : tATRegistryItem;
     idx    : longint;
 begin
+  fillchar(itm, sizeof(itm), 0);
   with itm.boardid do begin stock_id:= aalltrade.stock_id; level:= aalltrade.level; end;
   if search(@itm, idx) then begin
     result:= pATRegistryItem(items[idx])^.storage;

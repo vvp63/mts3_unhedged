@@ -349,18 +349,14 @@ type
     name                    : array[0..25] of ansichar;          // ofs: 24  size: 26
     moment                  : tcg_time;          // ofs: 50  size: 10
     value                   : array[0..10] of byte;          // ofs: 60  size: 11
-    prev_close_value        : array[0..10] of byte;          // ofs: 71  size: 11
-    open_value              : array[0..10] of byte;          // ofs: 82  size: 11
-    max_value               : array[0..10] of byte;          // ofs: 93  size: 11
-    min_value               : array[0..10] of byte;          // ofs: 104  size: 11
-    usd_rate                : array[0..6] of byte;          // ofs: 115  size: 7
-    cap                     : array[0..10] of byte;          // ofs: 122  size: 11
-    volume                  : array[0..10] of byte;          // ofs: 133  size: 11
-    value_highprec          : array[0..10] of byte;          // ofs: 144  size: 11
-    prev_close_value_highprec: array[0..10] of byte;          // ofs: 155  size: 11
-    open_value_highprec     : array[0..10] of byte;          // ofs: 166  size: 11
-    max_value_highprec      : array[0..10] of byte;          // ofs: 177  size: 11
-    min_value_highprec      : array[0..10] of byte;          // ofs: 188  size: 11
+    usd_rate                : array[0..6] of byte;          // ofs: 71  size: 7
+    cap                     : array[0..10] of byte;          // ofs: 78  size: 11
+    volume                  : array[0..10] of byte;          // ofs: 89  size: 11
+    value_highprec          : array[0..10] of byte;          // ofs: 100  size: 11
+    prev_close_value_highprec: array[0..10] of byte;          // ofs: 111  size: 11
+    open_value_highprec     : array[0..10] of byte;          // ofs: 122  size: 11
+    max_value_highprec      : array[0..10] of byte;          // ofs: 133  size: 11
+    min_value_highprec      : array[0..10] of byte;          // ofs: 144  size: 11
   end;
 
 implementation

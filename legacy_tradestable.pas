@@ -149,7 +149,6 @@ begin BroadcastTableEvent(evBeginTrades, astock_id, alevel); end;
 
 procedure srvAddTradesRec(var struc: tTrades; changedfields: tTradesSet);
 var  trade            : pTrdCollItm;
-     tempset          : tTradesSet;
      NewTradeArrived  : boolean;
      i                : longint;
      {$ifdef trades_advanced_stat}
@@ -168,7 +167,6 @@ begin
     EnterCriticalSection(TradesCritSect);
     try
       trade:= Trades.Add(@struc, changedfields, NewTradeArrived);
-      tempset:= changedfields;
     finally LeaveCriticalSection(TradesCritSect); end;
 
     if assigned(trade) then

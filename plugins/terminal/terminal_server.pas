@@ -168,16 +168,15 @@ constructor tTerminalServer.create(const aininame, anodename: ansistring);
 begin
   inherited create;
   fininame:= aininame;
-
-  log('Server started');
+  log('server started');
 end;
 
 destructor tTerminalServer.destroy;
 begin
-  log('Server closed');
-
+  log('server is closing...');
   if assigned(fIni) then freeandnil(fIni);
   inherited destroy;
+  log('server closed');
 end;
 
 function  tTerminalServer.fGetIniFile: tIniFile;

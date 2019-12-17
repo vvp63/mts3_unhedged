@@ -18,9 +18,11 @@ implementation
 
 {$ifndef UNIX}
 var ResSet : ULONG;
+{$endif}
 
 initialization
   IsMultiThread:= true;
+{$ifndef UNIX}
   NtSetTimerResolution(5000, true, @ResSet);
 {$endif}
 

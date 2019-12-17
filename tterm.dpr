@@ -43,7 +43,7 @@ begin
   srv_executeconsolecommand('exit');
 end;
 {$else}
-procedure DoSig(sig: cint); cdecl;
+procedure CtrlHandler(sig: cint); cdecl;
 begin
   log('shutting down... reason: sigint');
   srv_flushlog;
@@ -69,7 +69,8 @@ begin
       {$ifdef MSWINDOWS}
       SetConsoleCtrlHandler(@CtrlHandler, true);
       {$else}
-      fpSignal(SIGINT, SignalHandler(@DoSig));
+      fpSignal(SIGINT, SignalHandler(@CtrlHandler));
+      fpSignal(SIGTERM, SignalHandler(@CtrlHandler));
       {$endif}
 
       chdir(ExeFilePath);

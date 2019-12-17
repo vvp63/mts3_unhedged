@@ -44,6 +44,7 @@ begin
     while not terminated do ProcessSocketIO;
 
   except on e: exception do log('connections thread exception: %s', [e.message]); end;
+  log('terminal thread exited...');
 end;
 
 { misc functions }
@@ -59,7 +60,10 @@ end;
 procedure FinalizeTerminalSupport;
 begin
   try
-    if assigned(terminalthread) then freeandnil(terminalthread);
+    if assigned(terminalthread) then try
+      terminalthread.terminate;
+      terminalthread.WaitFor;
+    finally freeandnil(terminalthread); end;
   except on e: exception do log('finalize terminal server exception: %s', [e.message]); end;
 end;
 

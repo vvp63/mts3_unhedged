@@ -25,9 +25,13 @@ function  getnextconsolecommand(aidleproc: tMainIdleHandler): ansistring;
 var buf : array[0..4096] of ansichar;
     res : boolean;
 begin
+  setlength(result, 0);
   res:= assigned(command_queue);
   if res then result:= command_queue.pop(res);
-  if not res then setstring(result, buf, readconsolecommandex('>', false, @buf, sizeof(buf), false, aidleproc));
+  if not res then begin
+    buf[0]:= #0;
+    setstring(result, buf, readconsolecommandex('>', false, @buf, sizeof(buf), false, aidleproc));
+  end;
 end;
 
 function  readconsolecommandex(prompt: pAnsiChar; masked: boolean; buf: pAnsiChar; buflen: longint; idle: boolean; idleproc: tMainIdleHandler): longint;

@@ -994,16 +994,16 @@ begin
 
       sec.shortname     := sec.code;
 
-      sec.hibid         := cg_utils_get_bcd(value);
+      sec.hibid         := cg_utils_get_bcd(value_highprec);
       sec.lowoffer      := sec.hibid;
       sec.lastdealprice := sec.hibid;
 
       sec.lastdealtime  := cg_utils_get_time(moment);
 
-      sec.initprice     := cg_utils_get_bcd(open_value);
-      sec.minprice      := cg_utils_get_bcd(min_value);
-      sec.maxprice      := cg_utils_get_bcd(max_value);
-      sec.closeprice    := cg_utils_get_bcd(prev_close_value);
+      sec.initprice     := cg_utils_get_bcd(open_value_highprec);
+      sec.minprice      := cg_utils_get_bcd(min_value_highprec);
+      sec.maxprice      := cg_utils_get_bcd(max_value_highprec);
+      sec.closeprice    := cg_utils_get_bcd(prev_close_value_highprec);
       sec.prev_price    := sec.closeprice;
 
       sec.tradingstatus := #$4E;
