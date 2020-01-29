@@ -4,9 +4,14 @@ interface
 
 uses {$ifdef MSWINDOWS}
         windows,
+      {$else}
+        cmem,
+        cthreads,
       {$endif}
+      dynlibs,
       sysutils,
       classes,
+      strings,
       fclinifiles,
       postgres,
       sortedlist,

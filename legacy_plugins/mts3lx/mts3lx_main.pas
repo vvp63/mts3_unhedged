@@ -1,27 +1,39 @@
+{$M+}
+
 unit mts3lx_main;
 
 interface
 
 uses  {$ifdef MSWINDOWS}
         windows,
+      {$else}
+        cmem,
+        cthreads,
       {$endif}
+      dynlibs,
       sysutils,
+      classes,
+      strings,
       fclinifiles,
       postgres,
+      mts3lx_start,
       mts3lx_common,
       mts3lx_sheldue,
       mts3lx_securities,
       mts3lx_tp,
-      mts3lx_queue;
+      mts3lx_queue,
+      mts3lx_otmanager
+      ;
+
+
 
 function  MTS3_Init: longint; stdcall;
 function  MTS3_DBConnect: longint; stdcall;
 function  MTS3_DBDisconnect: longint; stdcall;
 function  MTS3_Done: longint; stdcall;
 
+
 implementation
-
-
 
 
 function  MTS3_Init: longint; stdcall;
@@ -38,6 +50,7 @@ begin
   InitScheldue;
   InitMTSSec;
   InitMTSTP;
+  InitOTManager;
   InitMTSQueue;
 
   FileLog('MTS3 Ini OK', 1);
@@ -49,6 +62,7 @@ end;
 function  MTS3_Done: longint; stdcall;
 begin
     DoneMTSQueue;
+    DoneOTManager;
     DoneMTSTP;
     DoneMTSSec;
     DoneScheldue;
@@ -61,10 +75,9 @@ end;
 function  MTS3_DBConnect: longint; stdcall;
 var vParamValue : string;
     pghost,pgport,pgoptions,pgtty,dbname,login,pwd : Pchar;
-   { res : PPGresult;
-    i   : longint;
-    SL  : tStringList;  }
+
 begin
+
   pghost := NiL;
   pgport := NiL;
   pgoptions := NiL;

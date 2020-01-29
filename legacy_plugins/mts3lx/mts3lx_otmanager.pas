@@ -2,11 +2,16 @@ unit mts3lx_otmanager;
 
 interface
 
-uses  {$ifdef MSWINDOWS}
+uses {$ifdef MSWINDOWS}
         windows,
+      {$else}
+        cmem,
+        cthreads,
       {$endif}
+      dynlibs,
       sysutils,
       classes,
+      strings,
       fclinifiles,
       postgres,
       sortedlist,
@@ -51,12 +56,11 @@ procedure tOTManager.AddOrderToDB(aorder: tOrders);
 begin
   with aorder do try
     if (stock_id > 0) and (stock_id < 10) then begin
+
       PGQueryMy('SELECT public.addupdateorder(%d, %d, %d, ''%s'', ''%s'', %d, ''%s'', ''%s'', ''%s'', ''%s'', %g, %d, %g, ''%s'', %d, ''%s'', ''%s'', ''%s'')',
                         [transaction, internalid, stock_id, level, code, orderno, FormatDateTime('yyyymmdd hh:nn:ss', ordertime),
-                        status, buysell, account, price, quantity, value, clientid, balance, ' ', settlecode, comment]);
-     { ExecuteQuery('exec AddUpdateOrder %d, %d, %d, ''%s'', ''%s'', %d, ''%s'', ''%s'', ''%s'', ''%s'', %g, %d, %g, ''%s'', %d, ''%s'', ''%s'', ''%s''',
-                        [transaction, internalid, stock_id, level, code, orderno, FormatDateTime('yyyymmdd hh:nn:ss', ordertime),
-                        status, buysell, account, price, quantity, value, clientid, balance, ' ', settlecode, comment]);  }
+                        status, buysell, account, price, quantity, value, clientid, balance, ' ', settlecode, comment], true);
+
       FileLog('tOTManager.AddOrderToDB     :   %d[%d] %s %.6g/%d(%d) %s %s',
                                   [orderno, transaction, code, price, quantity, balance, buysell, status], 2);
     end;
@@ -72,13 +76,11 @@ begin
   result:=  0;
   with atrade do try
     if (stock_id > 0) and (stock_id < 10) then begin
-      res := PGQueryMy('SELECT public.addupdatetrade(%d, %d, %d, ''%s'', ''%s'', %d, ''%s'', ''%s'', ''%s'', ''%s'', %g, %d, %g, ''%s'', %d, ''%s'', ''%s'', ''%s'')',
+
+      res := PGQueryMy('SELECT public.addupdatetrade(%d, %d, %d, ''%s'', ''%s'', %d, %d, ''%s'', ''%s'', ''%s'', %g, %d, %g, %g, ''%s'', ''%s'', ''%s'', ''%s'')',
                         [transaction, internalid, stock_id, level, code, tradeno, orderno, FormatDateTime('yyyymmdd hh:nn:ss', tradetime),
-                       buysell, account, price, quantity, value, accr, clientid, ' ', settlecode, comment]);
-    {
-      OpenQuery('exec AddUpdateTrade %d, %d, %d, ''%s'', ''%s'', %d, %d, ''%s'', ''%s'', ''%s'', %g, %d, %g, %g, ''%s'', ''%s'', ''%s'', ''%s''',
-                      [transaction, internalid, stock_id, level, code, tradeno, orderno, FormatDateTime('yyyymmdd hh:nn:ss', tradetime),
-                       buysell, account, price, quantity, value, accr, clientid, ' ', settlecode, comment]);        }
+                       buysell, account, price, quantity, value, accr, clientid, ' ', settlecode, comment], true);
+
       if (PQresultStatus(res) = PGRES_TUPLES_OK) then for i := 0 to PQntuples(res)-1 do begin
         SL :=  QueryResult(PQgetvalue(res, i, 0));
         if SL.Count > 0 then result:=  StrToIntDef(SL[0], 0);
@@ -97,6 +99,7 @@ function tOTManager.HasActive(abuysell: char; atpid, aSecId: longint;
 var   i     : longint;
       res   : PPGresult;
       SL    : tStringList;
+     // vt1, vt2  : string;
 begin
   result:=  0; aquantity:=  0; aprice:= 0; aorderno:= 0; adroptime:=  0;
   try
@@ -104,11 +107,15 @@ begin
     if (PQresultStatus(res) = PGRES_TUPLES_OK) then for i := 0 to PQntuples(res)-1 do begin
       SL :=  QueryResult(PQgetvalue(res, i, 0));
       if SL.Count > 4 then begin
+      {  vt1:=  copy(SL[4], 2, length(SL[4]) - 2);
+        vt2:=  copy(SL[4], 3, length(SL[4]) - 4);
+        Filelog(' ----------  tOTManager.HasActive ---%s---%s--%s', [SL[4], vt1, vt2], 2); }
+
         Result    :=  StrToIntDef(SL[0], 0);
         aprice    :=  StrToFloatDef(SL[1], 0);
         aquantity :=  StrToIntDef(SL[2], 0);
         aorderno  :=  StrToInt64Def(SL[3], 0);
-        adroptime :=  StrToDateTime(SL[4]);
+        adroptime :=  StrToDateTime(copy(SL[4], 2, length(SL[4]) - 9)); //StrToDateTime(SL[4]);
       end;
 {
       OpenQuery('exec GetActiveOrders %d, %d, ''%s''', [atpid, aSecId, abuysell]);
@@ -146,16 +153,13 @@ begin
 
         if assigned(Server_API) then begin
 
-          res := PGQueryMy('SELECT public.addmyorder(%d, %d, ''%s'', %g, %d)', [atpid, asec^.SecurityId, abuysell, aprice, aquantity]);
+          res := PGQueryMy('SELECT public.addmyorder(%d, %d, ''%s'', %g, %d)',
+                  [atpid, asec^.SecurityId, abuysell, aprice, aquantity]);
           if (PQresultStatus(res) = PGRES_TUPLES_OK) then for i := 0 to PQntuples(res)-1 do begin
             SL :=  QueryResult(PQgetvalue(res, i, 0));
             if SL.Count > 0 then vtransid:=  StrToIntDef(SL[0], 0);
           end;
-          {
-          with tQuery.create do try
-            OpenQuery('exec AddMyOrder %d, %d, ''%s'', %g, %d', [atpid, asec^.SecurityId, abuysell, aprice, aquantity]);
-            if not eof then vtransid  :=    fields[0].AsInteger;
-          finally free; end;  }
+
 
 
           filelog('tOTManager.SetMyOrder [%d %s] %s %s %d/%.6g TRSid=%d Mode=%s',
@@ -249,19 +253,15 @@ begin
 
       if assigned(Server_API) then begin
 
-          res := PGQueryMy('SELECT public.addmyorder(%d, %d, ''%s'', %g, %d)', [atpid, asec^.SecurityId, abuysell, aprice, aquantity]);
+          res := PGQueryMy('SELECT public.addmyorder(%d, %d, ''%s'', %g, %d)',
+                    [atpid, asec^.SecurityId, abuysell, aprice, aquantity]);
           if (PQresultStatus(res) = PGRES_TUPLES_OK) then for i := 0 to PQntuples(res)-1 do begin
             SL :=  QueryResult(PQgetvalue(res, i, 0));
             if SL.Count > 0 then vtransid:=  StrToIntDef(SL[0], 0);
           end;
 
-      {
-        with tQuery.create do try
-          OpenQuery('exec AddMyOrder %d, %d, ''%s'', %g, %d', [atpid, asec^.SecurityId, abuysell, aprice, aquantity]);
-          if not eof then vtransid  :=    fields[0].AsInteger;
-        finally free; end;}
-
-        filelog('tOTManager.MoveMyOrder %d [%d %s] %s %s %d/%.6g TRSid=%d', [aorderno, atpid, asec^.code, aaccount, abuysell, aquantity, aprice, vtransid], 1);
+        filelog('tOTManager.MoveMyOrder %d [%d %s] %s %s %d/%.6g TRSid=%d',
+                [aorderno, atpid, asec^.code, aaccount, abuysell, aquantity, aprice, vtransid], 1);
 
         if vtransid > 0 then begin
 

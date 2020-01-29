@@ -3,14 +3,17 @@ unit mts3lx_tp;
 
 interface
 
-uses  {$ifdef MSWINDOWS}
+uses {$ifdef MSWINDOWS}
         windows,
       {$else}
-        dynlibs,
+        cmem,
+        cthreads,
       {$endif}
+      dynlibs,
       math,
       sysutils,
       classes,
+      strings,
       fclinifiles,
       postgres,
       sortedlist,
@@ -343,22 +346,22 @@ begin
         vbd:= BdirectDB; vbi:= BinverseDB;
         BdirectDB       :=  StrToFloatDef(SL[5], 0);
         BinverseDB      :=  StrToFloatDef(SL[6], 0);
-        if (BdirectDB >= BinverseDB) then  begin
+        if (BdirectDB >= BinverseDB) then begin
           BdirectDB:= vbd; BinverseDB:= vbi; Result:=  false;
         end;
         VolMax          :=  StrToIntDef(SL[7], 0);
         VolEliminated   :=  StrToIntDef(SL[8], 0);
         BVolChangeDir   :=  StrToFloatDef(SL[9], 0);
-        Vmin            :=  StrToIntDef(SL[10], 0);
-        Vmax            :=  StrToIntDef(SL[11], 0);
-        PLmax           :=  StrToIntDef(SL[12], 0);
-        MaxVolBefore    :=  StrToIntDef(SL[13], 0);
-        PSToMove        :=  StrToIntDef(SL[14], 0);
-        VolToMove       :=  StrToIntDef(SL[15], 0);
-        HedgeMode       :=  (SL[16])[1];
-        CashShift       :=  StrToFloatDef(SL[17], 0);
-        BVolChangeInv   :=  StrToFloatDef(SL[18], 0);
-        BSquareKf       :=  StrToFloatDef(SL[19], 0);
+        Vmin            :=  StrToIntDef(SL[12], 0);
+        Vmax            :=  StrToIntDef(SL[13], 0);
+        PLmax           :=  StrToIntDef(SL[14], 0);
+        MaxVolBefore    :=  StrToIntDef(SL[15], 0);
+        PSToMove        :=  StrToIntDef(SL[16], 0);
+        VolToMove       :=  StrToIntDef(SL[17], 0);
+        HedgeMode       :=  (SL[18])[1];
+        CashShift       :=  StrToFloatDef(SL[19], 0);
+        BVolChangeInv   :=  StrToFloatDef(SL[10], 0);
+        BSquareKf       :=  StrToFloatDef(SL[11], 0);
         RIntPD          :=  StrToIntDef(SL[20], 0);
         RIntPortf       :=  StrToIntDef(SL[21], 0);
       end;
@@ -438,6 +441,8 @@ begin
 end;
 
 
+
+
 procedure tTP.DirectInverseQuote(aBuySell : char; aBaseSec  : pTPSec; var avol  : longint; var aprice : real; aonlydrop : boolean = false);
 var
   vtransid, vquantity     : longint;
@@ -460,21 +465,19 @@ begin
                   [TPId, Name, aBuySell, BoolToStr(aonlydrop, true), avol, aprice], 2);
     vtransid:=  0;
 
-    //  TODO : unblock
     
     if assigned(OTManager) then vtransid:=  OTManager.HasActive(aBuySell, TPId, aBaseSec^.SecId, vprice, vquantity, vorderno, vdroptime);
-    
 
 
     if (vtransid > 0) then begin
-      filelog('tTP.DirectInverseQuote [%d %s] %s Order exists %d %d %.6g/%d   lastdropat %s',
+      filelog('MTS3LX_TP. DirectInverseQuote [%d %s] %s Order exists %d %d %.6g/%d   lastdropat %s',
                         [TPId, Name, aBuySell, vtransid, vorderno, vprice, vquantity, FormatDateTime('hh:mm:ss.zzz', vdroptime)], 2);
       vMoveByPrice:=  HaveLevelBetween(aBuySell, aBaseSec, vprice, aprice) and
                       (abs(aprice - vprice) >= TPParams.PSToMove * aBaseSec^.Sec^.Params.pricestep);
       if (not gGlobalOrderStatus) or (aonlydrop) or (not vDIStatus) or (not vBeforeFlag)
                 or vMoveByPrice or (abs(avol - vquantity) >= TPParams.VolToMove) or (avol <= 0) then begin
         //  Надо снимать или передвигать заявку
-        filelog('tTP.DirectInverseQuote [%d %s] %s Need to drop or remove order %d %d (%.6g/%d) (%.6g/%d) status=%s distatus=%s',
+        filelog('MTS3LX_TP. DirectInverseQuote [%d %s] %s Need to drop or remove order %d %d (%.6g/%d) (%.6g/%d) status=%s distatus=%s',
                     [TPId, Name, aBuySell, vtransid, vorderno, vprice, vquantity, aprice, avol,
                      BoolToStr(gGlobalOrderStatus, true), BoolToStr(vDIStatus, true)], 3);
         if (vorderno > 0) and ( (now - vdroptime) > 1 * SecDelay) and assigned(OTManager) then begin
@@ -486,7 +489,7 @@ begin
 
     end else begin
 
-      filelog('tTP.DirectInverseQuote [%d %s] %s No active orders.  %s lastrejtime=%s',
+      filelog('MTS3LX_TP. DirectInverseQuote [%d %s] %s No active orders.  %s lastrejtime=%s',
                 [TPId, Name, aBuySell, aBaseSec^.Sec.code, FormatDateTime('dd.mm.yyyy hh:nn:ss.zzz', aBaseSec^.LastRejTime)], 2);
 
       if gGlobalOrderStatus and (not aonlydrop) and vDIStatus and vBeforeFlag
@@ -736,8 +739,6 @@ begin
 
         vAvgToadd:=   Sec.Params.lastdealprice;
 
-        //  TMP AVG
-        //if ( (Sec^.SecType = 'F') or (Sec^.SecType = 'I') or (Sec^.SecType = 'I') ) and assigned(AVGList) then
 
         if ashowquotes then if (Sec^.SecType <> 'I') or (TPSecType = 'C') then Sec^.LogQuotes else Sec^.LogSec;
 

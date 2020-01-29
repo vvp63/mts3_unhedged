@@ -6,34 +6,34 @@ uses sysutils;
 
 type  tCommandParser = class(tObject)
       private
-        fCommandLine : ansistring;
-        fPreparsed   : array of ansistring;
+        fCommandLine : string;
+        fPreparsed   : array of string;
         fCount       : longint;
         fCurrentChar : longint;
         function    fEndOfLine: boolean;
         function    fGetNextChar: char;
         procedure   fSkipSpaces;
-        function    fGetNextWord: ansistring;
-        procedure   fSetCommandLine(const avalue: ansistring);
+        function    fGetNextWord: string;
+        procedure   fSetCommandLine(const avalue: string);
         function    fGetParamCount: longint;
         procedure   reset;
         procedure   parse;
       protected
-        function    GetParameter(aindex: longint): ansistring; virtual;
-        function    GetParameterLowCase(aindex: longint): ansistring;
+        function    GetParameter(aindex: longint): string; virtual;
+        function    GetParameterLowCase(aindex: longint): string;
       public
-        constructor create(const acommandline: ansistring); virtual;
-        property    paramline: ansistring read fCommandLine write fSetCommandLine;
+        constructor create(const acommandline: string); virtual;
+        property    paramline: string read fCommandLine write fSetCommandLine;
         property    paramcount: longint read fCount;
-        property    param[aindex: longint]: ansistring read GetParameter;
-        property    paramlow[aindex: longint]: ansistring read GetParameterLowCase;
+        property    param[aindex: longint]: string read GetParameter;
+        property    paramlow[aindex: longint]: string read GetParameterLowCase;
       end;
 
 implementation
 
 { tCommandParser }
 
-constructor tCommandParser.create(const acommandline: ansistring);
+constructor tCommandParser.create(const acommandline: string);
 begin
   inherited create;
   fSetCommandLine(acommandline);
@@ -65,7 +65,7 @@ begin
   until fquit;
 end;
 
-function tCommandParser.fGetNextWord: ansistring;
+function tCommandParser.fGetNextWord: string;
 var ch : char;
 begin
   setlength(result, 0);
@@ -77,7 +77,7 @@ begin
   if not fEndOfLine then dec(fCurrentChar);
 end;
 
-procedure tCommandParser.fSetCommandLine(const avalue: ansistring);
+procedure tCommandParser.fSetCommandLine(const avalue: string);
 begin fCommandLine:= avalue; parse; end;
 
 function tCommandParser.fGetParamCount: longint;
@@ -107,13 +107,13 @@ end;
 procedure tCommandParser.reset;
 begin fCurrentChar:= 1; end;
 
-function tCommandParser.GetParameter(aindex: longint): ansistring;
+function tCommandParser.GetParameter(aindex: longint): string;
 begin
   if (aindex >= 0) and (aindex < length(fPreparsed)) then result:= fPreparsed[aindex]
                                                      else setlength(result, 0);
 end;
 
-function tCommandParser.GetParameterLowCase(aindex: longint): ansistring;
+function tCommandParser.GetParameterLowCase(aindex: longint): string;
 begin result:= lowercase(GetParameter(aindex)); end;
 
 end.

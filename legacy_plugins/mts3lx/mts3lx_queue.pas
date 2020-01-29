@@ -2,10 +2,15 @@ unit mts3lx_queue;
 
 interface
 
-uses  {$ifdef MSWINDOWS}
+
+uses {$ifdef MSWINDOWS}
         windows,
+      {$else}
+        cmem,
+        cthreads,
       {$endif}
-      sysutils, custom_threads, sortedlist, servertypes,
+      dynlibs,
+      sysutils, threads, sortedlist, servertypes,
       mts3lx_common;
 
 type  tQueueType  = (ev_type_order, ev_type_trade, ev_type_soresult,
@@ -137,7 +142,7 @@ begin
                             if Assigned(TPList) then TPList.QuoteTP(evTPId);
 
                           end;
-      {
+
         ev_type_order   : begin
                             with evOrder do
                               FileLog('QUEUE     :   Order %d[%d] %s %.6g/%d(%d) %s %s',
@@ -167,7 +172,7 @@ begin
                                 if ( (evSoResult.accepted = soRejected) or (evSoResult.accepted = soError) )
                                     and assigned(OTManager) then OTManager.SetOrderRejected(evSoResult.externaltrs, vtpid, vsecid);  
                             end;
-                                }
+                            
 
         ev_type_command   : begin
 
@@ -183,7 +188,7 @@ begin
 
       end;
 
-    end else sleep(10);
+    end else sleep(0);
 
   except on e:exception do Filelog(' !!! EXCEPTION: QUEUE %s (step %d)', [e.message, vexstep], 0); end;
 

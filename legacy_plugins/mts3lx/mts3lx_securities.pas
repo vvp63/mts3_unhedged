@@ -4,9 +4,14 @@ interface
 
 uses {$ifdef MSWINDOWS}
         windows,
+      {$else}
+        cmem,
+        cthreads,
       {$endif}
+      dynlibs,
       sysutils,
       classes,
+      strings,
       fclinifiles,
       postgres,
       sortedlist,
@@ -157,7 +162,7 @@ end;
 procedure tQuote.AddQuote(aprice: real; aquantity: longint);
 var vpQuoteItem   : pQuoteItem;
 begin
-  vpQuoteItem:= new(pQuoteItem);
+  new(vpQuoteItem);
   with pQuoteItem(vpQuoteItem)^ do begin
     quantity:=  aquantity; price:=  aprice;
   end;
@@ -417,7 +422,7 @@ begin
           if SL.Count > 5 then begin
             vSec  :=  tSec.Create(StrToIntDef(SL[0], 0), SL[1], SL[2], StrToIntDef(SL[3], 0), SL[4], SL[5]);
             with vSec do FileLog('MTS3LX_SECURITIES. LoadFromDB   : Adding   %s %s/%d Added', [code, level, stockid], 2);
-            vpSec:= new(pSec); vpSec^  :=  vSec; add(vpSec);
+            new(vpSec); vpSec^  :=  vSec; add(vpSec);
           end;
         end;
       PQclear(res);

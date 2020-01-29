@@ -1,0 +1,14 @@
+uses
+{$ifdef MSWINDOWS}
+        windows,
+      {$else}
+        dynlibs,
+        cthreads,
+        cmem,
+      {$endif}
+  sysutils,
+  serverapi,
+  tterm_api,
+  tterm_commandparser,
+  mts3lx_main,
+  mts3lx_start;

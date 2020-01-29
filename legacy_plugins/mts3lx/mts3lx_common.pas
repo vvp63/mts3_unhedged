@@ -1,30 +1,44 @@
-{$ifdef FPC}
-  {$mode DELPHI}
-{$else}
-  {$define MSWINDOWS}
-{$endif}
-
+{$M+}
 
 unit mts3lx_common;
+
 
 interface
 
 uses  {$ifdef MSWINDOWS}
         windows,
+      {$else}
+        cmem,
+        cthreads,
       {$endif}
+      dynlibs,
       sysutils,
       classes,
       fclinifiles,
-//      postgres,
+      filedump,
+      postgres,
+      serverapi,
       servertypes,
+      tterm_api,
+      tterm_commandparser,
       mts3lx_start,
-      mts3lx_logger;
+      mts3lx_logger
+      ;
 
-const gIniFileName  : ansistring      = './legacy_plugins/mts3lx.ini';
+
+const {$ifdef MSWINDOWS}
+      ExeFileName          : ansistring = 'mts3lx.dll';
+      {$else}
+      ExeFileName          : ansistring = 'libmts3lx.so';
+      {$endif}
+      ExeFilePath          : ansistring = '.';
+
+const 
+      gIniFileName  : string      = 'mts3lx.ini';
       gIniFile      : TIniFile    = nil;
-//      gPGConn       : PPGConn     = nil;
+      gPGConn       : PPGConn     = nil;
 
-      gLogFileTempl : ansistring      = './legacy_plugins/mts3lx_%s.log';
+      gLogFileTempl : string      = 'mts3lx_%s.log';
       gLogLevel     : longint     = 2;
 
 const
@@ -44,10 +58,10 @@ const
       PDReloadKfCommand         : longint       = 0;
 
 const
-  DefaultToId               : ansistring        = '';
+  DefaultToId               : string        = '';
 
-//var
-//  DefaultToUser             : array of ansistring;
+var
+  DefaultToUser             : array of string;      
 
 
 
@@ -64,23 +78,22 @@ const
 
 
 
-procedure log(const alogstr: ansistring);   overload;
-procedure log(const alogstr: ansistring; const aparams  : array of const);  overload;
+procedure log(const alogstr: string);   overload;
+procedure log(const alogstr: string; const aparams  : array of const);  overload;
 
-procedure msglog (atoid, atouser: ansistring; str: ansistring; const params: array of const); overload;
-procedure msglog (str: ansistring; const params: array of const); overload;
+procedure msglog (atoid, atouser: string; str: string; const params: array of const); overload;
+procedure msglog (str: string; const params: array of const); overload;
 
-procedure MTSOutputStockAll(const aparamname, aparamcode: ansistring;
+procedure MTSOutputStockAll(const aparamname, aparamcode: string;
                             adir, ainv, adirs, ainvs, adirft, ainvft: real; acode : char; ropttime : TDateTime);
 
-//procedure FileLog(const aStr : ansistring; const aParam  : array of const; aLogLevel : longint); overload;
-procedure FileLog(const aStr : ansistring; aLogLevel : longint); //overload;
-//procedure FileLog(const aStr : ansistring); overload;
-
-function QueryResult(const aRes : ansistring) : tStringList;
-function PrepareDateFromTS(const aDt  : ansistring)  : ansistring;
-//function PGQueryMy(const aStr : ansistring): PPGresult;  overload;
-//function PGQueryMy(const aStr : ansistring; aParam: array of const)  : PPGresult;  overload;
+procedure FileLog(aStr : string; aParam  : array of const; aLogLevel : longint); overload;
+procedure FileLog(aStr : string; aLogLevel : longint); overload;
+procedure FileLog(aStr : string); overload;
+function QueryResult(const aRes : string) : tStringList;
+function PrepareDateFromTS(const aDt  : string)  : string;
+function PGQueryMy(aStr : string)  : PPGresult;  overload;
+function PGQueryMy(aStr : string; aParam  : array of const; aLog  : boolean = false)  : PPGresult;  overload;
 
 
 function Min(const a, b : longint)  : longint; overload;
@@ -94,22 +107,21 @@ implementation
 
 
 
-procedure log(const alogstr: ansistring);  overload;
+procedure log(const alogstr: string);  overload;
 begin
   if assigned(logproc) then logproc(pAnsiChar(format(plugname + ': %s', [alogstr])));
-  FileLog(alogstr, 0);
+  FileLog('[T] ' + alogstr);
 end;
 
 
-procedure log(const alogstr: ansistring; const aparams: array of const);  overload;
+procedure log(const alogstr: string; const aparams  : array of const);  overload;
 begin log(format(alogstr, aparams)); end;
 
 
-procedure msglog (atoid, atouser: ansistring; str: ansistring; const params: array of const); overload;
+procedure msglog (atoid, atouser: string; str: string; const params: array of const); overload;
 var i : longint;
 begin
   if (length(atoid) = 0) then atoid:= DefaultToId;
-{
   if length(atoid) <> 0 then
     if (length(atouser) = 0) then begin
       for i:= low(DefaultToUser) to high(DefaultToUser) do
@@ -119,11 +131,10 @@ begin
       if assigned(server_api) and assigned(server_api^.SendUserMessage) then
         server_api^.SendUserMessage(pchar(atoid), pchar(atouser), pchar(format(str, params)));
     end;
-}
-  Log(str, params);
+    Log(str, params);
 end;
 
-procedure msglog (str: ansistring; const params: array of const); overload;
+procedure msglog (str: string; const params: array of const); overload;
 begin msglog('', '', str, params); end;
 
 
@@ -131,7 +142,7 @@ begin msglog('', '', str, params); end;
 
 
 
-procedure MTSOutputStockAll(const aparamname, aparamcode: ansistring;
+procedure MTSOutputStockAll(const aparamname, aparamcode: string;
                             adir, ainv, adirs, ainvs, adirft, ainvft: real; acode : char; ropttime : TDateTime);
 var sec : tSecurities;
 begin
@@ -157,41 +168,41 @@ begin
   end;
 end;
 
-{
-procedure FileLog(const aStr: ansistring; const aParam: array of const; aLogLevel: longint);
-//var vStr  : ansistring;
-//    i     : longint;
+
+
+procedure FileLog(aStr : string; aParam  : array of const; aLogLevel : longint);
+var vStr  : string;
+    i     : longint;
 begin
   vStr:= ''; for i:= 1 to aLogLevel do vStr:= vStr + '  ';
   if (aLogLevel <= gLogLevel) then begin
-    LogFileWrite(Format(vStr + aStr, aParam));
-    //advanceddumpbuf(gLogFileTempl, Format(aStr, aParam), nil, 0);
+    LogFileWrite(Format(vStr + aStr, aParam));//advanceddumpbuf(gLogFileTempl, Format(aStr, aParam), nil, 0);
   end;
 end;
-}
 
-procedure FileLog(const aStr: ansistring; aLogLevel: longint); //overload;
+procedure FileLog(aStr : string; aLogLevel : longint); overload;
+begin FileLog(aStr, [], aLogLevel); end;
+
+procedure FileLog(aStr : string); overload;
+begin FileLog(aStr, 0); end;
+
+
+function PGQueryMy(aStr : string)  : PPGresult;  overload;
+begin if (PQstatus(gPGConn) = CONNECTION_OK) then result:=  PQexec(gPGConn, PChar(aStr)) else result:=  nil; end;
+
+
+function PGQueryMy(aStr : string; aParam  : array of const; aLog  : boolean = false)  : PPGresult;  overload;
+var vStr  : string;
 begin
-// FileLog(aStr, [], aLogLevel);
+  vStr  := format(aStr, aParam);
+  if (aLog) then FileLog('PGQueryMy:    %s', [vStr], 1);
+  result:= PGQueryMy(vStr);
 end;
 
-{
-procedure FileLog(const aStr: ansistring); overload;
-begin
-// FileLog(aStr, 0);
-end;
-}
-
-//function PGQueryMy(const aStr: ansistring)  : PPGresult;  overload;
-//begin if (PQstatus(gPGConn) = CONNECTION_OK) then result:=  PQexec(gPGConn, PChar(aStr)) else result:=  nil; end;
-
-//function PGQueryMy(const aStr: ansistring; aParam: array of const)  : PPGresult;  overload;
-//begin result:= PGQueryMy(format(aStr, aParam)); end;
 
 
-
-function QueryResult(const aRes : ansistring) : tStringList;
-var vStr  : ansistring;
+function QueryResult(const aRes : string) : tStringList;
+var vStr  : string;
     i, vp : longint;
     fl    : boolean;
 begin
@@ -212,7 +223,7 @@ begin
   end;
 end;
 
-function PrepareDateFromTS(const aDt: ansistring): ansistring;
+function PrepareDateFromTS(const aDt  : string)  : string;
 begin
   result:=  '';
   if (length(aDT) > 12) then
