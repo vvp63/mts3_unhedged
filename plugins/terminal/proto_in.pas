@@ -15,16 +15,16 @@ uses {$ifdef MSWINDOWS}
 const
 //------------------------------------------------------------------------------------------------------------------------------------------
 //---------------------- ParseStream results
-  ps_OK              = 0;
-  ps_ERR_CRC         = 1;
-  ps_ERR_BUFLEN      = 2;
-  ps_ERR_TABLEID     = 3;
+  ps_OK                = 0;
+  ps_ERR_CRC           = 1;
+  ps_ERR_BUFLEN        = 2;
+  ps_ERR_TABLEID       = 3;
 
 //---------------------- InitCodes results
-  ic_OK              = ps_OK;
-  ic_ERR_CRC         = ps_ERR_CRC;
-  ic_ERR_BUFLEN      = ps_ERR_BUFLEN;
-  ic_ERR_TABLE_NAME  = ps_ERR_TABLEID;
+  ic_OK                = ps_OK;
+  ic_ERR_CRC           = ps_ERR_CRC;
+  ic_ERR_BUFLEN        = ps_ERR_BUFLEN;
+  ic_ERR_TABLE_NAME    = ps_ERR_TABLEID;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 //---------------------- Lists with tables and/or fields
@@ -33,81 +33,81 @@ const
   MaxFieldsCountIfZero = 64;
 
 type
-  PFields = ^TFields;
-  TFields = record
-    Code : longint;
-    Field: PChar;
+  PFields              = ^TFields;
+  TFields              = record
+    Code               : longint;
+    Field              : PAnsiChar;
   end;
 
-  TFieldsArray = class (TSortedList)
-    function  CheckItem (item: pointer): boolean; override;
-    function  Compare (item1, item2: pointer): longint; override;
-    procedure FreeItem (item: pointer); override;
+  TFieldsArray         = class (TSortedList)
+    function    CheckItem (item: pointer): boolean; override;
+    function    Compare (item1, item2: pointer): longint; override;
+    procedure   FreeItem (item: pointer); override;
   end;
 
 //---------------------- Base class for decode incoming stream
 type
-  TDecoderClass = class of TDecoder;
+  TDecoderClass        = class of TDecoder;
 
 //----- Events
-  TNotifyStartParse  = procedure (Sender: TObject) of object;
-  TNotifyEndParse    = procedure (Sender: TObject; var ErrorCode: longint) of object;
+  TNotifyStartParse    = procedure (Sender: TObject) of object;
+  TNotifyEndParse      = procedure (Sender: TObject; var ErrorCode: longint) of object;
 
-  TNotifyStartUpdate = procedure (Sender: TObject) of object;
-  TNotifyEndUpdate   = procedure (Sender: TObject) of object;
+  TNotifyStartUpdate   = procedure (Sender: TObject) of object;
+  TNotifyEndUpdate     = procedure (Sender: TObject) of object;
 
 
-  TDecoder = class (TObject)
+  TDecoder             = class (TObject)
   private
-    BitMask      : PChar;
-    BitMaskSize  : longint;
-
-    FData        : pointer;
-
-    FonEndParse  : TNotifyEndParse;
-    FonStartParse: TNotifyStartParse;
+    BitMask            : PAnsiChar;
+    BitMaskSize        : longint;
+                       
+    FData              : pointer;
+                       
+    FonEndParse        : TNotifyEndParse;
+    FonStartParse      : TNotifyStartParse;
   protected
-    CountCodes : longint;
-    Fields     : TFieldsArray;
-    Position   : longint;
+    CountCodes         : longint;
+    Fields             : TFieldsArray;
+    Position           : longint;
 
-    FieldsCodes: array of longint;
+    FieldsCodes        : array of longint;
     function    GetFieldCount: longint; virtual;
   public
     constructor Create (FieldsCount: longint = 0); virtual;
     destructor  Destroy; override;
     procedure   EndParse (var ParseErrorCode: longint); virtual;
     function    GetField (FieldNum: longint): PFields; virtual; abstract;
-    function    InitCodes (Buffer: PChar; BufLen: longint): longint;
+    function    InitCodes (Buffer: PAnsiChar; BufLen: longint): longint;
     procedure   InitComplete; virtual;
-    function    ParseStream (Buffer: PChar; BufLen: longint): longint; virtual;
+    function    ParseStream (Buffer: PAnsiChar; BufLen: longint): longint; virtual;
     function    RecUpdated: longint; virtual; abstract;
     procedure   StartParse; virtual;
-    function    UpdateValue (Code: longint; Buffer: PChar): longint; virtual; abstract;
+    function    UpdateValue (Code: longint; Buffer: PAnsiChar): longint; virtual; abstract;
 
     property    Data        : pointer           read FData         write FData;
     property    onEndParse  : TNotifyEndParse   read FonEndParse   write FonEndParse;
     property    onStartParse: TNotifyStartParse read FonStartParse write FonStartParse;
   end;
-
-  TMRecDecoder = class (TDecoder)
+                       
+  TMRecDecoder         = class (TDecoder)
   private
-    OldStockID: longint;
-    OldLevel  : string;
-    OldCode   : string;
-    FirstRec  : boolean;
+    OldStockID         : longint;
+    OldLevel           : ansistring;
+    OldCode            : ansistring;
+    FirstRec           : boolean;
 
-    FUpdateStarted: boolean;
+    FUpdateStarted     : boolean;
 
-    FonEndUpdate  : TNotifyEndUpdate;
-    FonStartUpdate: TNotifyStartUpdate;
+    FonEndUpdate       : TNotifyEndUpdate;
+    FonStartUpdate     : TNotifyStartUpdate;
   protected
-    function    CheckUpdate (StockID: longint; Level, Code: string): boolean;
+    function    CheckUpdate (StockID: longint; const Level, Code: ansistring): boolean;
   public
     procedure   EndParse (var ParseErrorCode: longint); override;
     procedure   EndUpdate; virtual;
-    function    GetCode: string; virtual; abstract;
-    function    GetLevel: string; virtual; abstract;
+    function    GetCode: ansistring; virtual; abstract;
+    function    GetLevel: ansistring; virtual; abstract;
     function    GetStockID: longint; virtual; abstract;
     function    RecUpdated: longint; override;
     procedure   StartParse; override;
@@ -120,54 +120,54 @@ type
 //------------------------------------------------------------------------------------------------------------------------------------------
 //---------------------- Container of all table decoders
 type
-  PTable = ^TTable;
-  TTable = record
-    TableID: byte;
-    Table  : PChar;
-    Decoder: TDecoder;
+  PTable                  = ^TTable;
+  TTable                  = record
+    TableID               : byte;
+    Table                 : PAnsiChar;
+    Decoder               : TDecoder;
   end;
 
 type
-  TTableArray = class (TSortedList)
-    function  CheckItem (item: pointer): boolean; override;
-    function  Compare (item1, item2: pointer): longint; override;
-    procedure FreeItem (item: pointer); override;
+  TTableArray             = class (TSortedList)
+    function    CheckItem (item: pointer): boolean; override;
+    function    Compare (item1, item2: pointer): longint; override;
+    procedure   FreeItem (item: pointer); override;
   end;
 
-  TTableList = class (TSortedList)
-    function  CheckItem (item: pointer): boolean; override;
-    function  Compare (item1, item2: pointer): longint; override;
-    procedure FreeItem (item: pointer); override;
+  TTableList              = class (TSortedList)
+    function    CheckItem (item: pointer): boolean; override;
+    function    Compare (item1, item2: pointer): longint; override;
+    procedure   FreeItem (item: pointer); override;
   end;
 
-  TIncomingBufferDecoder = class (TObject)
-    TableArray: TTableArray;
-    TableList : TTableList;
-    CritSect  : TRTLCriticalSection;
+  TIncomingBufferDecoder  = class (TObject)
+    TableArray            : TTableArray;
+    TableList             : TTableList;
+    CritSect              : TRTLCriticalSection;
     constructor Create;
     destructor  Destroy; override;
     procedure   Init;
-    function    InitCodes (Buffer: PChar; BufLen: longint): longint;
-    function    ParseBuffer (Buffer: PChar; BufLen: longint): longint; virtual;
-    procedure   RegisterDecoder (TableName: PChar; Decoder: TDecoder); virtual;
+    function    InitCodes (Buffer: PAnsiChar; BufLen: longint): longint;
+    function    ParseBuffer (Buffer: PAnsiChar; BufLen: longint): longint; virtual;
+    procedure   RegisterDecoder (TableName: PAnsiChar; Decoder: TDecoder); virtual;
   end;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 procedure InitProto (BufDecoder: TIncomingBufferDecoder);
 
-function RegisterDecoder (BufDecoder: TIncomingBufferDecoder; TableName: PChar; Decoder: TDecoder): boolean;
+function RegisterDecoder (BufDecoder: TIncomingBufferDecoder; TableName: PAnsiChar; Decoder: TDecoder): boolean;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-function ConvertToDateTime (const Str: string): TDateTime;
-function CheckCRC (Buffer: PChar; BufLen: longint): boolean;
+function ConvertToDateTime (const Str: ansistring): TDateTime;
+function CheckCRC (Buffer: PAnsiChar; BufLen: longint): boolean;
 
-function _StrToInt (const Str: string): longint;
-function _StrToInt64 (const Str: string): int64;
-function _StrToDateTime (const Str: string): TDateTime;
-function _StrToFloat (const Str: string): real;
-function _StrToCurr (const Str: string): currency;
+function _StrToInt (const Str: ansistring): longint;
+function _StrToInt64 (const Str: ansistring): int64;
+function _StrToDateTime (const Str: ansistring): TDateTime;
+function _StrToFloat (const Str: ansistring): real;
+function _StrToCurr (const Str: ansistring): currency;
 
 implementation
 
@@ -176,7 +176,7 @@ implementation
 type
   PLongint = ^longint;
 
-function ConvertToDateTime (const Str: string): TDateTime;
+function ConvertToDateTime (const Str: ansistring): TDateTime;
 var w: array [0..5] of word;
 begin
   w [0]:= StrToInt (Copy (Str, 1, 2));
@@ -188,29 +188,29 @@ begin
   result:= EncodeDate (w [2], w [1], w [0]) + EncodeTime (w [3], w [4], w [5], 0);
 end;
 
-function CheckCRC (Buffer: PChar; BufLen: longint): boolean;
+function CheckCRC (Buffer: PAnsiChar; BufLen: longint): boolean;
 var CRC: longint;
 begin
   CRC:= PLongint (Buffer + sizeof (longint))^;
   PLongint (Buffer + sizeof (longint))^:= sgProtSign;
-  result:= BufCRC32 (Buffer^, BufLen) = CRC;
+  result:= (BufCRC32 (Buffer^, BufLen) = CRC);
 end;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-function _StrToInt (const Str: string): longint;
+function _StrToInt (const Str: ansistring): longint;
 begin if (length(Str) > 0) then result:= StrToIntDef (Str, 0) else result:= 0; end;
 
-function _StrToInt64 (const Str: string): int64;
+function _StrToInt64 (const Str: ansistring): int64;
 begin if (length(Str) > 0) then result:= StrToInt64Def (Str, 0) else result:= 0; end;
 
-function _StrToDateTime (const Str: string): TDateTime;
+function _StrToDateTime (const Str: ansistring): TDateTime;
 begin if (length(Str) > 0) then result:= ConvertToDateTime (Str) else result:= 0;  end;
 
-function _StrToFloat (const Str: string): real;
+function _StrToFloat (const Str: ansistring): real;
 begin if (length(Str) > 0) then result:= StrToFloat (Str) else result:= 0; end;
 
-function _StrToCurr (const Str: string): currency;
+function _StrToCurr (const Str: ansistring): currency;
 begin if (length(Str) > 0) then result:= StrToCurr (Str) else result:= 0; end;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -219,7 +219,7 @@ function TFieldsArray.CheckItem (item: pointer): boolean;
 begin result:= true; end;
 
 function TFieldsArray.Compare (item1, item2: pointer): longint;
-begin result:= StrIComp (PFields (item1)^.Field, PFields (item2)^.Field); end;
+begin result:= StrIComp(PFields (item1)^.Field, PFields (item2)^.Field); end;
 
 procedure TFieldsArray.FreeItem (item: pointer);
 begin end;
@@ -261,7 +261,7 @@ end;
 function TDecoder.GetFieldCount: longint;
 begin result:= 0; end;
 
-function TDecoder.InitCodes (Buffer: PChar; BufLen: longint): longint;
+function TDecoder.InitCodes (Buffer: PAnsiChar; BufLen: longint): longint;
 var Position: longint;
     Field   : TFields;
     Index   : longint;
@@ -271,17 +271,17 @@ begin
   SetLength (FieldsCodes, max (MaxFieldsCountIfZero, Fields.Count * 2));
   CountCodes:= 0;
   while Position < BufLen do begin
-    Field.Field:= PChar (Buffer + Position);
+    Field.Field:= PAnsiChar (Buffer + Position);
 
     if Fields.Search (@Field, Index) then FieldsCodes [CountCodes]:= PFields (Fields [Index])^.Code
                                      else FieldsCodes [CountCodes]:= 0;
     inc (CountCodes);
-    inc (Position, StrLen (Field.Field) + SizeOf (char));
+    inc (Position, StrLen (Field.Field) + SizeOf (ansichar));
   end;
   InitComplete;
 end;
 
-function TDecoder.ParseStream (Buffer: PChar; BufLen: longint): longint;
+function TDecoder.ParseStream (Buffer: PAnsiChar; BufLen: longint): longint;
 var BitNum    : longint;
     WaitedSize: longint;
 begin
@@ -294,8 +294,8 @@ begin
     BitNum:= 0;
     while (result = ps_OK) and (Position < BufLen) and (BitNum < CountCodes) do begin
       if CheckBit (BitMask, BitNum) then begin
-        WaitedSize:= UpdateValue (FieldsCodes [BitNum], Buffer + Position) + SizeOf (char);
-        if WaitedSize < SizeOf (char) then result:= ps_ERR_BUFLEN else inc (Position, WaitedSize);
+        WaitedSize:= UpdateValue (FieldsCodes [BitNum], Buffer + Position) + SizeOf (ansichar);
+        if WaitedSize < SizeOf (ansichar) then result:= ps_ERR_BUFLEN else inc (Position, WaitedSize);
       end;
       inc (BitNum);
     end;
@@ -311,7 +311,7 @@ end;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-function TMRecDecoder.CheckUpdate (StockID: longint; Level, Code: string): boolean;
+function TMRecDecoder.CheckUpdate (StockID: longint; const Level, Code: ansistring): boolean;
 begin
   result:= (StockID <> OldStockID) or (Level <> OldLevel) or (Code <> OldCode);
   if result then begin
@@ -381,7 +381,7 @@ end;
 
 function TTableArray.Compare (item1, item2: pointer): longint;
 begin
-  result:= StrIComp (PTable (item1)^.Table, PTable (item2)^.Table);
+  result:= StrIComp(PTable (item1)^.Table, PTable (item2)^.Table);
 end;
 
 procedure TTableArray.FreeItem (item: pointer);
@@ -409,8 +409,8 @@ end;
 
 destructor TIncomingBufferDecoder.Destroy;
 begin
-  TableList.Free;
-  TableArray.Free;
+  freeandnil(TableList);
+  freeandnil(TableArray);
   {$ifdef MSWINDOWS}
   DeleteCriticalSection(CritSect);
   {$else}
@@ -426,31 +426,29 @@ begin
   LeaveCriticalSection (CritSect);
 end;
 
-function TIncomingBufferDecoder.InitCodes (Buffer: PChar; BufLen: longint): longint;
-const c  = SizeOf (char);
-      b  = SizeOf (byte);
-var idx: longint;
-    tbl: TTable;
-    tl : PTable;
-    len: longint;
+function TIncomingBufferDecoder.InitCodes (Buffer: PAnsiChar; BufLen: longint): longint;
+const c   = SizeOf (ansichar);
+      b   = SizeOf (byte);
+var   idx : longint;
+      tbl : TTable;
+      tl  : PTable;
+      len : longint;
 begin
-  tbl.Table:= (Buffer + b);
-  if not TableArray.Search (@tbl, idx) then result:= ic_ERR_TABLE_NAME
-  else begin
+  tbl.Table:= Buffer + b;
+  if TableArray.Search (@tbl, idx) then begin
     tl:= PTable (TableArray [idx]);
     tl^.TableID:= byte (Buffer^);
     TableList.Add (tl);
-    len:= Length (tbl.Table) + c + b;
+    len:= StrLen(tbl.Table) + c + b;
     result:= tl^.Decoder.InitCodes (Buffer + len, BufLen - len);
-  end;
+  end else result:= ic_ERR_TABLE_NAME;
 end;
 
-function TIncomingBufferDecoder.ParseBuffer (Buffer: PChar; BufLen: longint): longint;
-const lb = SizeOf (longint) * 2 + SizeOf (byte);
-      l  = SizeOf (longint) * 2;
-var idx: longint;
-    tbl: TTable;
-
+function TIncomingBufferDecoder.ParseBuffer (Buffer: PAnsiChar; BufLen: longint): longint;
+const lb  = SizeOf (longint) * 2 + SizeOf (byte);
+      l   = SizeOf (longint) * 2;
+var   idx : longint;
+      tbl : TTable;
 begin
   EnterCriticalSection (CritSect);
   result:= ps_OK;
@@ -460,24 +458,23 @@ begin
       BufLen:= PLongint (Buffer)^;
       if CheckCRC (Buffer, BufLen) then begin
         if BufLen > l then
-          if byte ((Buffer + l)^) = idTableDescr then result:= InitCodes (Buffer + lb, BufLen - lb)
-          else begin
+          if byte ((Buffer + l)^) <> idTableDescr then begin
             tbl.TableID:= byte ((Buffer + l)^);
-            if TableList.Search (@tbl, idx) then result:= PTable (TableList [idx])^.Decoder.ParseStream (Buffer + lb, BufLen - lb)
-            else result:= ps_ERR_TABLEID;
-          end;
+            if TableList.Search(@tbl, idx) then result:= PTable (TableList [idx])^.Decoder.ParseStream (Buffer + lb, BufLen - lb)
+                                           else result:= ps_ERR_TABLEID;
+          end else result:= InitCodes (Buffer + lb, BufLen - lb);
       end else result:= ic_ERR_CRC;
     end else result:= ps_ERR_BUFLEN;
 //  except
 //    on e: exception do begin
-//                         MessageBox (0, PChar (Format ('Exception: %s'#13'Buffer/Size: %p/%d', [e.Message, pointer (Buffer), BufLen])), 'IBD.ParseBuffer', 0);
+//                         MessageBox (0, PAnsiChar (Format ('Exception: %s'#13'Buffer/Size: %p/%d', [e.Message, pointer (Buffer), BufLen])), 'IBD.ParseBuffer', 0);
 //                         result:= ic_ERR_CRC
 //                       end;
 //  end;
   finally LeaveCriticalSection (CritSect); end;
 end;
 
-procedure TIncomingBufferDecoder.RegisterDecoder (TableName: PChar; Decoder: TDecoder);
+procedure TIncomingBufferDecoder.RegisterDecoder (TableName: pAnsiChar; Decoder: TDecoder);
 var rec: PTable;
 begin
   rec:= New (PTable);
@@ -493,7 +490,7 @@ begin
   if Assigned (BufDecoder) then BufDecoder.Init;
 end;
 
-function RegisterDecoder (BufDecoder: TIncomingBufferDecoder; TableName: PChar; Decoder: TDecoder): boolean;
+function RegisterDecoder (BufDecoder: TIncomingBufferDecoder; TableName: PAnsiChar; Decoder: TDecoder): boolean;
 begin
   if Assigned (BufDecoder) then begin
     result:= true;

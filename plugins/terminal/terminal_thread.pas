@@ -17,12 +17,12 @@ type  tTerminalThread = class(tCustomThread)
         procedure  execute; override;
       end;
 
-const terminalthread  : tTerminalThread = nil;
-
 procedure InitializeTerminalSupport;
 procedure FinalizeTerminalSupport;
 
 implementation
+
+const terminalthread  : tTerminalThread = nil;
 
 { tTerminalThread }
 

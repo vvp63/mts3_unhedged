@@ -147,7 +147,7 @@ begin
     if (BufCRC32(frame,sizeof(tProtocolRec)) = crc) and (frame.datasize >= 0) then begin
       result:= (Position + frame.datasize <= Size);
       Seek(-sizeof(tProtocolRec), soFromCurrent);
-    end else raise Exception.CreateFmt('Error receiving packet: magic: %.8x datasize: %d', [crc, frame.datasize]);
+    end else raise Exception.CreateFmt('ERROR receiving packet: magic: %.8x datasize: %d', [crc, frame.datasize]);
   end else result:= false;
 end;
 
@@ -368,9 +368,9 @@ begin
                                if (frame.flags and pfEncrypted <> 0) then begin
                                  case fnewdecoder of
                                    true  : if (rc5decryptbuf(bufptr, frame.datasize, @in_key) <> RC5Ok) then
-                                             raise Exception.Create('Error decrypting buffer');
+                                             raise Exception.Create('ERROR decrypting buffer');
                                    false : if (rc5decryptstaticbufcrc32(bufptr, frame.datasize, @in_key) <> RC5Ok) then
-                                             raise Exception.Create('Error decrypting buffer');
+                                             raise Exception.Create('ERROR decrypting buffer');
                                  end;
                                end;
 
@@ -378,7 +378,7 @@ begin
                                  if (frame.datasize >= 8) then begin
                                    totalsize:= StreamDecompress(bufptr, frame.datasize, pointer(uncomp), temp_buffer);
                                    if (totalsize > 0) then on_message(frame, uncomp, totalsize)
-                                                      else raise Exception.Create('Error decompressing buffer');
+                                                      else raise Exception.Create('ERROR decompressing buffer');
                                  end;
                                end else on_message(frame, bufptr, totalsize);
 

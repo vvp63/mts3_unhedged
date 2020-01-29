@@ -194,7 +194,7 @@ end;
 procedure tTerminalClient.on_client_login;
 begin
   with ClientInfo, version do begin
-    log('Client connected: %s version: %d.%d.%d', [ClientName, major, minor, build]);
+    log('client connected: %s version: %d.%d.%d', [ClientName, major, minor, build]);
 
     if NewDecoder then fbufferdecoder := tNewBufDecoder.create
                   else fbufferdecoder := tOldBufDecoder.create;
@@ -255,20 +255,20 @@ begin
       ps_ERR_CRC          : begin
                               trsres.errcode:= errDecryptFail;
                               queuedata(trsres, idTrsResult, sizeof(trsres));
-                              log('%s: Invalid packet crc, dropping...', [ClientName]);
+                              log('%s: invalid packet crc, dropping...', [ClientName]);
                             end;
-      ps_ERR_BUFLEN       : log('%s: Invalid packet length, dropping...', [ClientName]);
+      ps_ERR_BUFLEN       : log('%s: invalid packet length, dropping...', [ClientName]);
       ps_ERR_NOTENCRYPTED : begin
                               with trsres do begin transaction:= fbufferdecoder.currenttrs; errcode:= errNotEncrypted; end;
                               queuedata(trsres, idTrsResult, sizeof(trsres));
-                              log('%s: Request is not encrypted, dropping packet.', [ClientName]);
+                              log('%s: request is not encrypted, dropping packet.', [ClientName]);
                             end;
-      ps_ERR_TABLEID      : log('Unsupported table id: %d', [aframe.tableid]);
-      ps_ERR_UNSUPPORTED  : log('Unsupported client query id: %d', [aframe.tableid]);
+      ps_ERR_TABLEID      : log('unsupported table id: %d', [aframe.tableid]);
+      ps_ERR_UNSUPPORTED  : log('unsupported client query id: %d', [aframe.tableid]);
       ps_ERR_UNCOMPLETE   : begin
                               with trsres do begin transaction:= fbufferdecoder.currenttrs; errcode:= errIncompleteTrs; end;
                               queuedata(trsres, idTrsResult, sizeof(trsres));
-                              log('Uncomplete query. More fields required.');
+                              log('uncomplete query. More fields required.');
                             end;
       ps_ERR_NULLBUF      : ; // error while decrypting or decompressing buffer
     end;
@@ -297,7 +297,7 @@ type pptrarray = ^tptrarray;
 var  apis      : pptrarray;
      i, count  : longint;
 begin
-  log('%s: Received message: "%s"', [ClientName, atext]);
+  log('%s: received message: "%s"', [ClientName, atext]);
   if assigned(srv_getapis) and (srv_getapis(pointer(apis), count) = PLUGIN_OK) then begin
     for i:= 0 to count - 1 do
       if assigned(apis^[i]) and (apis^[i] <> plugin_api) then
@@ -427,7 +427,7 @@ begin
 end;
 
 procedure tTerminalClient.process_client_queue;
-var i      : longint;
+var i : longint;
 begin
   if assigned(fQueue) and assigned(fEncoderRegistry) then begin
     with fQueue do begin

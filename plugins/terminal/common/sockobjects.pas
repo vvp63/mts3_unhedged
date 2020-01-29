@@ -35,6 +35,7 @@ const EPOLLRDHUP              = $2000;
 const SD_SEND                 = 1;
 
 const INVALID_SOCKET          = TSocket(not(0));
+      SOCKET_ERROR            = -1;
 
 const epoll_size_delta        = 128;
 {$endif}
@@ -611,6 +612,8 @@ begin
     if (winsock2.WSAGetLastError = WSAEWOULDBLOCK) then result:= 0;
   {$else}
   result:= fpsend(handle, @buffer, bufsize, 0);
+  if (result = SOCKET_ERROR) then
+    if (SocketError = ESysEWOULDBLOCK) then result:= 0;
   {$endif}
 end;
 

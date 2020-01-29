@@ -51,17 +51,17 @@ implementation
 procedure tPluginRegistry.freeitem(item: pointer);
 var done : tUninitializeFunc;
 begin
-  if assigned(pPluginRegistryItem(item)) then with pPluginRegistryItem(item)^ do try
+  if assigned(item) then with pPluginRegistryItem(item)^ do try
     if (libhandle <> 0) then try
       if assigned(API) then with API^ do begin
         log('shutting down plugin: %s', [plugname]);
         try
           DoneLegacyAPI(API);
           if (plugflags and plStockProvider = plStockProvider) then begin
-            if assigned(stockAPI^.pl_Disconnect) then stockAPI^.pl_Disconnect;
+            if assigned(stockAPI) and assigned(stockAPI^.pl_Disconnect) then stockAPI^.pl_Disconnect();
           end;
         finally
-          if assigned(pl_Done) then pl_Done;
+          if assigned(pl_Done) then pl_Done();
         end;
       end else begin
         done:= getprocaddress(libhandle, PLG_Uninitialize);
@@ -73,6 +73,7 @@ begin
       freelibrary(libhandle);
       log('library [%d] unloaded', [libhandle]);
       log_flush;
+      libhandle:= 0;
     end;
   finally dispose(pPluginRegistryItem(item)); end;
 end;

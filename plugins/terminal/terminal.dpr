@@ -15,8 +15,8 @@ uses  terminal_sys,
       tterm_api,
       terminal_common, terminal_thread, terminal_client;
 
-function  Init(memmgr: pMemoryManager): longint;   cdecl; forward;
-function  Done: longint;                           cdecl; forward;
+function  Init(memmgr: pMemoryManager): longint;                           cdecl; forward;
+function  Done: longint;                                                   cdecl; forward;
 
 procedure SecArrived(var sec: tSecurities; changedfields: TSecuritiesSet); cdecl; forward;
 procedure KotirArrived(kotirdata: pointer);                                cdecl; forward;
@@ -72,7 +72,7 @@ begin
 
   InitializeTerminalSupport;
 
-  log('Terminal support started ok', []);
+  log('terminal support started ok', []);
 
   result:= PLUGIN_OK;
 end;
@@ -83,9 +83,9 @@ begin
   log('terminal done being called...');
   try
     FinalizeTerminalSupport;
-    log('Terminal support shutdown complete...');
-  except on e: exception do log('Terminal support shutdown exception: %s', [e.message]); end;
-  log('terminal done ok!');
+    log('terminal support shutdown complete...');
+  except on e: exception do log('terminal support shutdown exception: %s', [e.message]); end;
+  log('terminal done');
   result:= 0;
 end;
 

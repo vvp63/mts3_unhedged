@@ -100,7 +100,7 @@ var   i       : longint;
 const nullval : byte  = 0;
       trueval : byte  = 1;
   procedure writepc(pc: pAnsiChar);
-  begin if assigned(pc) then write(pc^,strlen(pc)); end;
+  begin if assigned(pc) then write(pc^, strlen(pc)); end;
   procedure writestr(const st: ansistring);
   begin if (length(st) > 0) then write(st[1], length(st)); end;
 begin
