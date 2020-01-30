@@ -22,6 +22,6 @@
 {$define disablemultipleinstance}
 {$define usefastmm4}
 {$define fastdroporder}
-
+{$define enable_log_buffer}
 
 
