@@ -57,7 +57,7 @@ begin
   with aorder do try
     if (stock_id > 0) and (stock_id < 10) then begin
 
-      PGQueryMy('SELECT public.addupdateorder(%d, %d, %d, ''%s'', ''%s'', %d, ''%s'', ''%s'', ''%s'', ''%s'', %g, %d, %g, ''%s'', %d, ''%s'', ''%s'', ''%s'')',
+      PGQueryMy('SELECT public.addupdateorder(%d, %d, %d, ''%s'', ''%s'', %d, ''%s'', ''%s'', ''%s'', ''%s'', %.6g, %d, %.6g, ''%s'', %d, ''%s'', ''%s'', ''%s'')',
                         [transaction, internalid, stock_id, level, code, orderno, FormatDateTime('yyyymmdd hh:nn:ss', ordertime),
                         status, buysell, account, price, quantity, value, clientid, balance, ' ', settlecode, comment], true);
 
@@ -77,7 +77,7 @@ begin
   with atrade do try
     if (stock_id > 0) and (stock_id < 10) then begin
 
-      res := PGQueryMy('SELECT public.addupdatetrade(%d, %d, %d, ''%s'', ''%s'', %d, %d, ''%s'', ''%s'', ''%s'', %g, %d, %g, %g, ''%s'', ''%s'', ''%s'', ''%s'')',
+      res := PGQueryMy('SELECT public.addupdatetrade(%d, %d, %d, ''%s'', ''%s'', %d, %d, ''%s'', ''%s'', ''%s'', %.6g, %d, %.6g, %g, ''%s'', ''%s'', ''%s'', ''%s'')',
                         [transaction, internalid, stock_id, level, code, tradeno, orderno, FormatDateTime('yyyymmdd hh:nn:ss', tradetime),
                        buysell, account, price, quantity, value, accr, clientid, ' ', settlecode, comment], true);
 
@@ -187,7 +187,7 @@ begin
               refundrate  := 0;
               reporate    := 0;
               price2      := 0;
-              vextext  :=  format('%d %d %s %s %s %g %d %s %d %s',
+              vextext  :=  format('%d %d %s %s %s %.6g %d %s %d %s',
                                 [transaction, stock_id,level,code,buysell,price, quantity,account, flags, cid]);
               filelog('tOTManager.SetMyOrder Info %s', [vextext], 1);
             end;

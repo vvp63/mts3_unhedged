@@ -174,7 +174,7 @@ var i : longint;
 begin
   result:=  format('[%d] ', [Count]);
   for i:= 0 to min(QuoteLogLength, Count) - 1 do
-      with pQuoteItem(items[i])^ do result:= result + format('%g/%d ', [price, quantity]);
+      with pQuoteItem(items[i])^ do result:= result + format('%.6g/%d ', [price, quantity]);
 end;
 
 //  Цена к объему
