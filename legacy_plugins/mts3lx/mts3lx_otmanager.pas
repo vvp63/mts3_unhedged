@@ -99,7 +99,6 @@ function tOTManager.HasActive(abuysell: char; atpid, aSecId: longint;
 var   i     : longint;
       res   : PPGresult;
       SL    : tStringList;
-     // vt1, vt2  : string;
 begin
   result:=  0; aquantity:=  0; aprice:= 0; aorderno:= 0; adroptime:=  0;
   try
@@ -107,26 +106,15 @@ begin
     if (PQresultStatus(res) = PGRES_TUPLES_OK) then for i := 0 to PQntuples(res)-1 do begin
       SL :=  QueryResult(PQgetvalue(res, i, 0));
       if SL.Count > 4 then begin
-      {  vt1:=  copy(SL[4], 2, length(SL[4]) - 2);
-        vt2:=  copy(SL[4], 3, length(SL[4]) - 4);
-        Filelog(' ----------  tOTManager.HasActive ---%s---%s--%s', [SL[4], vt1, vt2], 2); }
 
         Result    :=  StrToIntDef(SL[0], 0);
         aprice    :=  StrToFloatDef(SL[1], 0);
         aquantity :=  StrToIntDef(SL[2], 0);
         aorderno  :=  StrToInt64Def(SL[3], 0);
+        Filelog('tOTManager.HasActive droptime #%s#', [SL[4]], 3);
         adroptime :=  StrToDateTime(copy(SL[4], 2, length(SL[4]) - 9)); //StrToDateTime(SL[4]);
       end;
-{
-      OpenQuery('exec GetActiveOrders %d, %d, ''%s''', [atpid, aSecId, abuysell]);
-      while not eof do try
-        Result    :=  fields[0].AsInteger;
-        aprice    :=  fields[1].AsFloat;
-        aquantity :=  fields[2].AsInteger;
-        aorderno  :=  fields[3].AsInt64;
-        adroptime :=  Fields[4].AsDateTime;
-      finally next; end;
-    }
+
     end;
   except on e:exception do Filelog(' !!! EXCEPTION: tOTManager.HasActive %s', [e.message], 0); end;
 end;
@@ -306,7 +294,7 @@ var   i     : longint;
       SL    : tStringList;
 begin
   atpid:= 0;  asecid:=  0;
-  res := PGQueryMy('SELECT public.setorderrejected(%d)', [atrsid]);
+  res := PGQueryMy('SELECT public.setorderrejected(%d)', [atrsid], true);
   if (PQresultStatus(res) = PGRES_TUPLES_OK) then for i := 0 to PQntuples(res)-1 do begin
     SL :=  QueryResult(PQgetvalue(res, i, 0));
     if SL.Count > 1 then begin

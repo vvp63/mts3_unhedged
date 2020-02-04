@@ -304,7 +304,7 @@ begin
         end;
       PQclear(res);
     end;
-    filelog('MTS3LX_SECURITIES. GetTradeParams %s(%d) %d %g', [code, SecurityId, TradeParams.LotSize, TradeParams.PriceStep], 3);
+    filelog('MTS3LX_SECURITIES. GetTradeParams %s(%d) %d %.6g', [code, SecurityId, TradeParams.LotSize, TradeParams.PriceStep], 3);
   except on e:exception do Filelog(' !!! EXCEPTION: GetTradeParams %s', [e.message], 0); end;
 
 end;

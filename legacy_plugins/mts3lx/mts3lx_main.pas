@@ -41,6 +41,7 @@ begin
 
   DateSeparator := '-';
   ShortDateFormat := 'YYYY-MM-DD';
+  LongTimeFormat := 'hh:nn:ss.zzz';
 
   log('MTS3_Init  : Initialization. Loading ' + gIniFileName);
   // Ini-file initialization
