@@ -99,6 +99,7 @@ function tOTManager.HasActive(abuysell: char; atpid, aSecId: longint;
 var   i     : longint;
       res   : PPGresult;
       SL    : tStringList;
+      vppos : longint;
 begin
   result:=  0; aquantity:=  0; aprice:= 0; aorderno:= 0; adroptime:=  0;
   try
@@ -111,8 +112,9 @@ begin
         aprice    :=  StrToFloatDef(SL[1], 0);
         aquantity :=  StrToIntDef(SL[2], 0);
         aorderno  :=  StrToInt64Def(SL[3], 0);
-        Filelog('tOTManager.HasActive droptime #%s#', [SL[4]], 3);
-        adroptime :=  StrToDateTime(copy(SL[4], 2, length(SL[4]) - 9)); //StrToDateTime(SL[4]);
+        vppos:= pos('.', SL[4]);
+        adroptime :=  StrToDateTime(copy(SL[4], 2, vppos - 2)) + StrToIntDef(copy(SL[4], vppos + 1, 3), 0) * SecDelay / 1000;
+        //StrToDateTime(copy(SL[4], 2, length(SL[4]) - 6)); //StrToDateTime(SL[4]);
       end;
 
     end;
@@ -147,8 +149,6 @@ begin
             SL :=  QueryResult(PQgetvalue(res, i, 0));
             if SL.Count > 0 then vtransid:=  StrToIntDef(SL[0], 0);
           end;
-
-
 
           filelog('tOTManager.SetMyOrder [%d %s] %s %s %d/%.6g TRSid=%d Mode=%s',
               [atpid, asec^.code, aaccount, abuysell, aquantity, aprice, vtransid, amode], 1);

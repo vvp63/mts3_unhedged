@@ -47,7 +47,7 @@ begin
   // Ini-file initialization
   gIniFile :=  TIniFile.Create(gIniFileName);
 
-  MTS3_DBConnect;
+  MTS3_DBConnect;   //  Здесь же чтение инишника
   InitScheldue;
   InitMTSSec;
   InitMTSTP;
@@ -76,7 +76,6 @@ end;
 function  MTS3_DBConnect: longint; stdcall;
 var vParamValue : string;
     pghost,pgport,pgoptions,pgtty,dbname,login,pwd : Pchar;
-
 begin
 
   pghost := NiL;

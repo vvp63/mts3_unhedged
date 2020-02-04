@@ -35,8 +35,6 @@ uses  {$ifdef MSWINDOWS}
 
 
 
-
-
 function getDllAPI(srvapi: pServerAPI): pDataSourceAPI; cdecl;
 begin
     server_api:= srvapi;
