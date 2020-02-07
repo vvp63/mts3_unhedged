@@ -175,9 +175,9 @@ begin
               refundrate  := 0;
               reporate    := 0;
               price2      := 0;
-              vextext  :=  format('%d %d %s %s %s %.6g %d %s %d %s',
+           {   vextext  :=  format('%d %d %s %s %s %.6g %d %s %d %s',
                                 [transaction, stock_id,level,code,buysell,price, quantity,account, flags, cid]);
-              filelog('tOTManager.SetMyOrder Info %s', [vextext], 1);
+              filelog('tOTManager.SetMyOrder Info %s', [vextext], 1);  }
             end;
 
 

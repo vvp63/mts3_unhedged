@@ -31,6 +31,7 @@ function  MTS3_Init: longint; stdcall;
 function  MTS3_DBConnect: longint; stdcall;
 function  MTS3_DBDisconnect: longint; stdcall;
 function  MTS3_Done: longint; stdcall;
+function  MTS_ReloadMTS: longint; stdcall;
 
 
 implementation
@@ -70,6 +71,24 @@ begin
     MTS3_DBDisconnect;
     result:= 0;
 end;
+
+
+function  MTS_ReloadMTS: longint; stdcall;
+begin
+  FileLog('MTS3 Reload started', 1);
+  DoneMTSQueue;
+  DoneOTManager;
+  DoneMTSTP;
+  DoneMTSSec;
+  DoneScheldue;
+  InitScheldue;
+  InitMTSSec;
+  InitMTSTP;
+  InitOTManager;
+  InitMTSQueue;
+  result:= 0;
+end;
+
 
 //  DB functions
 

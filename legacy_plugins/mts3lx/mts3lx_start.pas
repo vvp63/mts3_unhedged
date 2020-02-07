@@ -240,6 +240,18 @@ begin
         FileLog('MTS_ParseCommand SetLogLevel %d',[gLogLevel], 0);
       end;
 
+
+      if (paramlow[0] = 'reloadmts3') then begin
+
+        vrelcode  :=  StrToIntDef(paramlow[1], 0);
+        if (vrelcode = ReloadApproveCode) then MTS_ReloadMTS
+        else begin
+          ReloadApproveCode := 100 + Random(900);
+          msglog(fromid, fromuser, 'MTS3 reload code %d', [ReloadApproveCode]);
+        end;
+
+      end;
+
       {
       if (paramlow[0] = 'starthedge') then begin
         gGlobalHedgeStatus := true;
@@ -266,18 +278,10 @@ begin
 
 
 
+
+
+
       {
-      if (paramlow[0] = 'reloadmts3') then begin
-
-        vrelcode  :=  StrToIntDef(paramlow[1], 0);
-        if (vrelcode = ReloadApproveCode) then MTS_ReloadMTS
-        else begin
-          ReloadApproveCode := 100 + Random(900);
-          msglog(fromid, fromuser, 'MTS3 reload code %d', [ReloadApproveCode]);
-        end;
-
-      end;
-
       if (paramlow[0] = 'rehedgepd') then begin
         PDRehedgeCommand  :=  StrToIntDef(paramlow[1], 0);
         msglog(fromid, fromuser, 'Rehedging PD in %d', [PDRehedgeCommand]);

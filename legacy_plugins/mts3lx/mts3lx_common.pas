@@ -45,6 +45,7 @@ const
       SecInDay                  : longint       = 86400;
       SecDelay                  : real          = 1.15740740e-5;
       ClientMessagesDelay       : real          = 1;
+      ReloadApproveCode         : longint       = -1;
 
 const
 
@@ -136,9 +137,6 @@ end;
 
 procedure msglog (str: string; const params: array of const); overload;
 begin msglog('', '', str, params); end;
-
-
-
 
 
 
