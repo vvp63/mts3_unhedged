@@ -63,6 +63,7 @@ type tTPTradeParams  = record
         BVolChangeDir   : Real;
         BVolChangeInv   : Real;
         BSquareKf       : Real;
+        BSquareKfInv    : Real;
         Vmin            : Longint;
         Vmax            : Longint;
         PLmax           : Longint;
@@ -364,6 +365,7 @@ begin
         BSquareKf       :=  StrToFloatDef(SL[11], 0);
         RIntPD          :=  StrToIntDef(SL[20], 0);
         RIntPortf       :=  StrToIntDef(SL[21], 0);
+        BSquareKfInv    :=  StrToIntDef(SL[22], 0);
       end;
     end;
 
@@ -825,6 +827,41 @@ begin
 end;
 
 
+
+
+
+procedure tTP.RecountBwithV;
+var vSec  : pTPSec;
+  //  vVolChange, vsquareshift  : real;
+begin
+  if TPSecList.GetBaseSec(vSec) then
+    with TPParams do begin
+    
+      if vSec^.Qty <= 0 then begin
+        Bdirect   :=  BdirectDB + BVolChangeDir * vSec^.Qty - abs(BSquareKf * vSec^.Qty * vSec^.Qty);
+        Binverse  :=  BinverseDB + BVolChangeInv * vSec^.Qty - abs(BSquareKfInv * vSec^.Qty * vSec^.Qty);
+      end;
+
+      if vSec^.Qty > 0 then begin
+        Bdirect   :=  BdirectDB + BVolChangeDir * vSec^.Qty + abs(BSquareKf * vSec^.Qty * vSec^.Qty);
+        Binverse  :=  BinverseDB + BVolChangeInv * vSec^.Qty + abs(BSquareKfInv * vSec^.Qty * vSec^.Qty);
+      end;
+
+      Filelog('tTP.RecountBwithV [%d %s] (%.4g %.4g)  DB (%.4g %.4g) (%.4g %.8g)  (%.4g %.8g)  Qty=%d',
+        [TPId, Name, Bdirect, Binverse, BdirectDB, BinverseDB,
+         BVolChangeDir, BSquareKf, BVolChangeInv, BSquareKfInv, vSec^.Qty], 4);
+
+      {if vSec^.Qty < 0 then vVolChange:= BVolChangeDir else vVolChange:= BVolChangeInv;
+      if vSec^.Qty > 0 then vsquareshift:= abs(BSquareKf * vSec^.Qty * vSec^.Qty) else vsquareshift:= -abs(BSquareKf * vSec^.Qty * vSec^.Qty);
+      Bdirect   :=  BdirectDB + vVolChange * vSec^.Qty + vsquareshift;
+      Binverse  :=  BinverseDB + vVolChange * vSec^.Qty + vsquareshift;
+      Filelog('tTP.RecountBwithV [%d %s] (%.4g %.4g)  DB (%.4g %.4g) %.4g %d %.6g',
+        [TPId, Name, Bdirect, Binverse, BdirectDB, BinverseDB, vVolChange, vSec^.Qty, vsquareshift], 4);    }
+    end;
+
+end;
+
+
 {
 function tTP.GetSecAvgPD(aSecId: longint): real;
 var
@@ -845,6 +882,7 @@ end;
 
 
 
+{
 procedure tTP.RecountBwithV;
 var vSec  : pTPSec;
     vVolChange, vsquareshift  : real;
@@ -860,6 +898,7 @@ begin
     end;
 
 end;
+}
 
         {
 
