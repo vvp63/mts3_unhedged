@@ -75,6 +75,10 @@ const
 const
   GlobalConnected           : boolean       = false;
 
+const
+  LastCommandTime           : tDateTime      = 0;            //  Последнее время проверки сообщений
+  CommandCheckInterval      : longint       = 3;
+
 
 
 

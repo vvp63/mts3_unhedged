@@ -10,7 +10,13 @@ uses {$ifdef MSWINDOWS}
         cthreads,
       {$endif}
       dynlibs,
-      sysutils, threads, sortedlist, servertypes,
+      sysutils,
+      threads,
+      sortedlist,
+      classes,
+      strings,      
+      servertypes,
+      postgres,
       mts3lx_common;
 
 type  tQueueType  = (ev_type_order, ev_type_trade, ev_type_soresult,
@@ -46,6 +52,7 @@ type tAllQueue = class (tCustomThreadList)
 type tEventHandler = class (tCustomThread)
        constructor create;
        procedure   execute; override;
+       procedure    CheckMessages;
 end;
 
 procedure InitMTSQueue;
@@ -102,6 +109,8 @@ end;
 
 { tEventHandler }
 
+
+
 constructor tEventHandler.create;
 begin
   inherited create(false);
@@ -109,12 +118,57 @@ begin
   FileLog('QUEUE     :   EventHandler started', 0);
 end;
 
+
+procedure tEventHandler.CheckMessages;
+var
+    i   : longint;
+    res : PPGresult;
+    SL  : tStringList;
+    vfrom, vmess  : string;
+    vqueue  : tQueueItem;
+begin
+    //  check command message if necessary
+
+    if (Now > (LastCommandTime + CommandCheckInterval * SecDelay)) then begin
+      FileLog('QUEUE.EventHandler     :  Checking messages', [], 1);
+
+      if (PQstatus(gPGConn) = CONNECTION_OK) then begin
+        res := PQexec(gPGConn, PChar(format('SELECT public.getmessages(''%s'')', ['mts3'])));
+        if (PQresultStatus(res) <> PGRES_TUPLES_OK) then log('MTS3LX_SECURITIES. GetTradeParams getmessages() error')
+        else
+          for i := 0 to PQntuples(res)-1 do begin
+            SL :=  QueryResult(PQgetvalue(res, i, 0));
+            if SL.Count > 2 then begin
+              vfrom   :=    SL[1];
+              vmess   :=    SL[2];
+              FileLog('QUEUE CheckMessages from=%s  message=%s', [vfrom, vmess], 2);
+
+              if (vfrom = 'monitor') and assigned(AllQueue) then begin
+                vqueue.evTime:=  Now; vqueue.evType:= ev_type_command; vqueue.evCommand:= vmess;
+                AllQueue.push(vqueue);
+              end;
+
+            end;
+          end;
+        PQclear(res);
+        res := PQexec(gPGConn, PChar(format('SELECT public.delmessages(''%s'')', ['mts3'])));
+        PQclear(res);
+      end;
+
+      LastCommandTime  :=  Now;
+    end;
+end;
+
+
+
 procedure tEventHandler.execute;
 var aevitem, vqueue : tQueueItem;
     vtpid, vsecid, vexstep : longint;
 begin
 
   while not terminated do try
+
+    CheckMessages;
 
     if assigned(AllQueue) and AllQueue.pop(aevitem) then begin
 
