@@ -387,7 +387,7 @@ var   vA, vB, vEt           : real;
 
 begin
 
-  FileLog('MTS3LX_TP. Quote     :   Start quoting %d %s',  [TPId, Name], 1);
+  FileLog('QS [%d %s]',  [TPId, Name], 1);
 
   if (PDReloadKfCommand = TPId) then begin
     ReLoadSecListKf;
@@ -427,7 +427,7 @@ begin
 
   if TPSecList.GetBaseSec(vBaseSec) and assigned(vBaseSec) then begin
     if gGlobalHedgeStatus and vinday then vfullhedged:= FullHedging(vBaseSec) else vfullhedged:= false;
-    FileLog('MTS3LX_TP. Quote     :   gtss=%s ghs=%s id=%s ida=%s fh=%s',
+    FileLog('Q gtss=%s ghs=%s id=%s ida=%s fh=%s',
           [BoolToStr(GlobalTradeSessionStarted, true), BoolToStr(gGlobalHedgeStatus, true), BoolToStr(vinday, true),
           BoolToStr(vactinday, true), BoolToStr(vfullhedged, true)], 3);
 
@@ -436,7 +436,7 @@ begin
   end;
      
      
-  FileLog('MTS3LX_TP. Quote     :   Quoting result [%d %s]  Sell=%.6g(%d)  Buy=%.6g(%d)  inday=%s(%s)',
+  FileLog('QR [%d %s]  S=%.6g(%d)  B=%.6g(%d) day=%s(%s)',
               [TPId, Name, vPriceS, vVolS, vPriceB, vVolB, BoolToStr(vinday, true), BoolToStr(vactinday, true)], 1);
             
 
@@ -463,7 +463,7 @@ begin
       DirectionParams(aBuySell, aBaseSec, aprice, avol, vBeforeFlag, vDIstatus);
     end;
 
-    FileLog('MTS3LX_TP. DirectInverseQuote [%d %s] %s (onlydrop = %s) Need set order V=%d Price=%.6g',
+    FileLog('DI [%d %s] %s (onlydrop = %s) Need set order V=%d Price=%.6g',
                   [TPId, Name, aBuySell, BoolToStr(aonlydrop, true), avol, aprice], 2);
     vtransid:=  0;
 
@@ -472,14 +472,14 @@ begin
 
 
     if (vtransid > 0) then begin
-      filelog('MTS3LX_TP. DirectInverseQuote [%d %s] %s Order exists %d %d %.6g/%d   lastdropat %s',
+      filelog('DI [%d %s] %s Order exists %d %d %.6g/%d   lastdropat %s',
                         [TPId, Name, aBuySell, vtransid, vorderno, vprice, vquantity, FormatDateTime('hh:mm:ss.zzz', vdroptime)], 2);
       vMoveByPrice:=  HaveLevelBetween(aBuySell, aBaseSec, vprice, aprice) and
                       (abs(aprice - vprice) >= TPParams.PSToMove * aBaseSec^.Sec^.Params.pricestep);
       if (not gGlobalOrderStatus) or (aonlydrop) or (not vDIStatus) or (not vBeforeFlag)
                 or vMoveByPrice or (abs(avol - vquantity) >= TPParams.VolToMove) or (avol <= 0) then begin
         //  Надо снимать или передвигать заявку
-        filelog('MTS3LX_TP. DirectInverseQuote [%d %s] %s Need to drop or remove order %d %d (%.6g/%d) (%.6g/%d) status=%s distatus=%s',
+        filelog('DI [%d %s] %s Need to drop or remove order %d %d (%.6g/%d) (%.6g/%d) status=%s distatus=%s',
                     [TPId, Name, aBuySell, vtransid, vorderno, vprice, vquantity, aprice, avol,
                      BoolToStr(gGlobalOrderStatus, true), BoolToStr(vDIStatus, true)], 3);
         if (vorderno > 0) and ( (now - vdroptime) > 1 * SecDelay) and assigned(OTManager) then begin
@@ -491,7 +491,7 @@ begin
 
     end else begin
 
-      filelog('MTS3LX_TP. DirectInverseQuote [%d %s] %s No active orders.  %s lastrejtime=%s',
+      filelog('DI [%d %s] %s No active orders.  %s lastrejtime=%s',
                 [TPId, Name, aBuySell, aBaseSec^.Sec.code, FormatDateTime('dd.mm.yyyy hh:nn:ss.zzz', aBaseSec^.LastRejTime)], 2);
 
       if gGlobalOrderStatus and (not aonlydrop) and vDIStatus and vBeforeFlag
@@ -595,7 +595,7 @@ begin
         vvol:=  Qty - QtyNeed; vbuysell:=  'S'; vprice:=  Sec.Bid.PriceToVol(vvol);
         if (Sec.SecType = 'F') and (TPParams.HedgeMode = 'M') then vprice:=  Sec.Params.limitpricelow;
       end;
-      FileLog('MTS3LX_TP.FullHedging [%d %s] %s Qty=%d QtyNeed=%d Vol=%d BS=%s price=%.6g  %s lastrejtime=%s',
+      FileLog('FullHedging [%d %s] %s Qty=%d QtyNeed=%d Vol=%d BS=%s price=%.6g  %s lastrejtime=%s',
                       [TPId, Name, Sec^.code, Qty, QtyNeed, vvol, vbuysell, vprice,
                       aBaseSec^.Sec.code, FormatDateTime('dd.mm.yyyy hh:nn:ss.zzz', aBaseSec^.LastRejTime)], 2);
       vtransid:=  0;
@@ -603,7 +603,7 @@ begin
 
       if assigned(OTManager) then vtransid:=  OTManager.HasActive(vbuysell, TPId, SecId, vpricetmp, vqtytmp, vorderno, vdroptime);
       if (vtransid > 0) then begin
-        filelog('tTP.FullHedging [%d %s] %s HedgeOrder exists %d %d %.6g/%d lastdrop=%s',
+        filelog('FullHedging [%d %s] %s HedgeOrder exists %d %d %.6g/%d lastdrop=%s',
                       [TPId, Name, vbuysell, vtransid, vorderno, vpricetmp, vqtytmp, FormatDateTime('hh:mm:ss.zzz', vdroptime)], 3);
         if (vorderno > 0) and ( (now - vdroptime) > 2 * SecDelay) and assigned(OTManager) then OTManager.DropOrder(vtransid, vorderno, Sec, Account);
       end else begin
@@ -670,7 +670,7 @@ begin
     end;
   end;
   FileLog('MTS3LX_TP.CriteriaSatisfied [%d %s] V=%d BuySell=%s Basis=%.6g  result=%s(%.6g)',
-            [TPId, Name, aV, aBuySell, vBasis, BoolToStr(result, true), aPriceToSet], 2);
+            [TPId, Name, aV, aBuySell, vBasis, BoolToStr(result, true), aPriceToSet], 3);
 end;
 
 
@@ -689,7 +689,7 @@ begin
     while true do begin
       if (abs(vBad - vGood) < 2) then break;
       Result:=  round( (vBad + vGood) / 2);
-      FileLog('MTS3LX_TP.DefineVDevidingAlt try [%d %s] BuySell=%s Vbad=%d vGood=%d  TryingV=%d', [TPId, Name, aBuySell, vBad, vGood, Result], 2);
+      FileLog('MTS3LX_TP.DefineVDevidingAlt try [%d %s] BuySell=%s Vbad=%d vGood=%d  TryingV=%d', [TPId, Name, aBuySell, vBad, vGood, Result], 3);
       CriteriaSatisfied(result, aBuySell, vTmpPrice);
       if (abs(vTmpPrice - aPriceToSet) < 1e-10) then vGood:= result else vBad:= Result;
     end;
@@ -713,7 +713,7 @@ begin
     if (vBb > 0) and vBFull then begin aB :=  vBh - vBb * vPD / vPS; aBFull:= true; end;
     if (vAb > 0) and (vBb > 0) and (vEt > 0) then begin aEt := vEt - (vAb + vBb) / 2 * vPD / vPS; aEtFull :=  true; end;
   end;
-  FileLog('MTS3LX_TP.CountB [%d %s] V=%d  Ask(%s)=%.6g  Bid(%s)=%.6g  Et=%.4g  CashShift=%.4g',
+  FileLog('CountB [%d %s] V=%d  Ask(%s)=%.6g  Bid(%s)=%.6g  Et=%.4g  CS=%.4g',
         [TPId, Name, avol, BoolToStr(aAFull, true), aA, BoolToStr(aBFull, true), aB, aEt, TPParams.CashShift], 3);
 end;
 
@@ -740,7 +740,6 @@ begin
       if Sec^.IsActive then begin
 
         vAvgToadd:=   Sec.Params.lastdealprice;
-
 
         if ashowquotes then if (Sec^.SecType <> 'I') or (TPSecType = 'C') then Sec^.LogQuotes else Sec^.LogSec;
 
@@ -784,13 +783,9 @@ begin
         end;
         if (TPSecType  = 'P') then vTmpStr:=  '';
 
-       { if assigned(AVGList) and vToAvg and ashowquotes and (abs(vAvgToadd) > 1e-12)
-            then AVGList.AddValSimple(TPId, Sec.code, vAvgToadd);
-            }
-
-        FileLog('MTS3LX_TP. CountBValues [%d %s]  %s %s %s  %s', [TPId, Name, Sec^.code, Sec^.SecType, TPSecType, vTmpStr], 4);
+        FileLog('CountBVal [%d %s]  %s %s %s  %s', [TPId, Name, Sec^.code, Sec^.SecType, TPSecType, vTmpStr], 4);
       end else begin
-        FileLog('MTS3LX_TP. CountBValues [%d %s]  %s is not active', [TPId, Name, Sec^.code], 4);
+        FileLog('CountBVal [%d %s]  %s is not active', [TPId, Name, Sec^.code], 4);
         aBFull:=  false; aAFull:=  false;
       end;
     end;
@@ -798,7 +793,7 @@ begin
   end;
 
   if (aPS = 0) then aPS:= 1;
-  FileLog('MTS3LX_TP. CountBValues res [%d %s]  Ask(%s)=%.6g %.6g  Bid(%s)=%.6g %.6g  Et=%.4g  PS=%.4g PD=%.4g',
+  FileLog('CountBVal [%d %s]  Ask(%s)=%.6g %.6g  Bid(%s)=%.6g %.6g  Et=%.4g  PS=%.4g PD=%.4g',
             [TPId, Name, BoolToStr(aAFull, true), aAb, aAh, BoolToStr(aBFull, true), aBb, aBh, aEt, aPS, aPD], 3);
 
 end;

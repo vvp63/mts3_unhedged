@@ -71,7 +71,6 @@ procedure InitMTSLogger;
 begin
   log('Initializing logfile %s', [gLogFileTempl]);
   FileOpenTry(gLogFileTempl);
- // LogFileWrite('Hello!');
 end;
 
 

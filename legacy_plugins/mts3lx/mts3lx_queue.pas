@@ -180,7 +180,6 @@ begin
                             FileLog('QUEUE     :   Sec params %s',  [evSec.code], 4);
                             if assigned(SecList) and SecList.CheckFilter(evSec.code, evSec.level, evSec.stock_id) then
                               SecList.SetParams(evSec);
-
                             end;
 
        ev_type_quots   : begin
