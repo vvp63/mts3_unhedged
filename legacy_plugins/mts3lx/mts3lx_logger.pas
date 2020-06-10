@@ -17,11 +17,12 @@ uses  {$ifdef MSWINDOWS}
 const INVALID_HANDLE_VALUE= -1;
 {$endif}
 
-const log_date_format     = 'yyyy-mm-dd hh":"nn":"ss"."zzz';
+const log_date_format                    = 'yyyy-mm-dd hh":"nn":"ss"."zzz';
 
 
 const FLogHandle        : tHandle         = INVALID_HANDLE_VALUE;
-const crlf            : pAnsiChar  = #$0d#$0a;
+const crlf              : pAnsiChar  = #$0d#$0a;
+
 
 procedure FileOpenTry(const afilename : string);
 procedure FileCloseHandle;
@@ -35,6 +36,7 @@ procedure DoneMTSLogger;
 implementation
 
 uses mts3lx_common;
+
 
 
 procedure FileOpenTry(const afilename : string);
