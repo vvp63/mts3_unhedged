@@ -456,14 +456,10 @@ begin
     with vSec do begin
       Params :=  aParams;
       LastParamTime :=  Now;
-      FileLog('MTS3LX_SECURITIES. SetParams   %s %s/%d Setted %d', [code, level, stockid, Params.lotsize], 4);
-      //  TODO  Unblock
-    {  if (Now > QuoteSaveTime + SecDelay * QuoteSaveDelay) then begin
-        with tQuery.create do try
-          ExecuteQuery('exec AppUpdateCurrentQuote ''%s'', %g, %g', [code, Params.lastdealprice, Params.fut_deposit]);
-        finally free; end;
+      if (Now > QuoteSaveTime + SecDelay * QuoteSaveDelay) then begin
+        PGQueryMy('SELECT public.addupdatecurrentquote(''%s'', %g, %g)', [code, Params.lastdealprice, Params.fut_deposit]);
         QuoteSaveTime :=  Now;
-      end;  }
+      end;
     end;
   finally unlocklist; end;
 

@@ -46,6 +46,7 @@ const
       SecDelay                  : real          = 1.15740740e-5;
       ClientMessagesDelay       : real          = 1;
       ReloadApproveCode         : longint       = -1;
+      QuoteSaveDelay            : longint       = 10;
 
 const
 
