@@ -218,13 +218,13 @@ begin
       if fortssign(signs, flag_Spot) then ls:= 1 else ls:= max(1, lot_volume);
 
       sec.tradingstatus    := state_to_tradingstatus(state);
-      sec.closeprice       := cg_utils_get_bcd(old_kotir) / ls;
-      sec.prev_price       := cg_utils_get_bcd(old_kotir) / ls;
+      sec.closeprice       := cg_utils_get_bcd(settlement_price_open) / ls;
+      sec.prev_price       := cg_utils_get_bcd(settlement_price_open) / ls;
       sec.fut_deposit      := cg_utils_get_bcd(buy_deposit);
 
 //      if (is_limited <> 0) then begin
-      sec.limitpricehigh   := (cg_utils_get_bcd(last_cl_quote) + cg_utils_get_bcd(limit_up)) / ls;
-      sec.limitpricelow    := (cg_utils_get_bcd(last_cl_quote) - cg_utils_get_bcd(limit_down)) / ls;
+      sec.limitpricehigh   := (cg_utils_get_bcd(settlement_price) + cg_utils_get_bcd(limit_up)) / ls;
+      sec.limitpricelow    := (cg_utils_get_bcd(settlement_price) - cg_utils_get_bcd(limit_down)) / ls;
       secset := secset + [sec_limitpricehigh, sec_limitpricelow];
 //      end;
 
@@ -696,7 +696,7 @@ begin
         alltrd.price     := cg_utils_get_bcd(price) / ls;
         alltrd.quantity  := xamount;
         alltrd.value     := (alltrd.price * lsz) * alltrd.quantity;
-        alltrd.buysell   := buysellval[(id_ord_buy - id_ord_sell > 0)];
+        alltrd.buysell   := buysellval[(public_order_id_buy - public_order_id_sell > 0)];
 
         server_api.AddAllTradesRec(alltrd);
       end;
