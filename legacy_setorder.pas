@@ -112,8 +112,8 @@ begin
   {$ifdef enabletimecounters} tickcount:= gettickcount; trstickcount:= 0; {$endif}
   setresult.accepted:= soRejected; setresult.quantity:= -1;
 
-  with moveorder do log('MOVESYSORD: Moving system order: [%d] %s  %d/%s/%s  %d/%f',
-                        [transaction, moveorder.account, stock_id, level, code, new_quantity, new_price]);
+  with moveorder do log('MOVESYSORD: Moving system order: [%d] %d %s  %d/%s/%s  %d/%f',
+                        [transaction, moveorder.orderno, moveorder.account, stock_id, level, code, new_quantity, new_price]);
 
   stockapi:= stock_apis[byte(moveorder.stock_id)];
   if assigned(stockapi) and assigned(stockapi^.pl_MoveOrder) then begin
@@ -222,7 +222,7 @@ begin
   setresult.accepted:= soUnknown; setresult.quantity:= -1;
   try
     {$ifdef enabletimecounters} tickcount:= GetTickCount; {$endif}
-    with droporder do log('DROPORDEX: Dropping system order: [%d] %d', [transaction, droporder.stock_id]);
+    with droporder do log('DROPORDEX: Dropping system order: [%d] %d %d', [transaction, droporder.orderno, droporder.stock_id]);
     stockapi:= stock_apis[byte(droporder.stock_id)];
     if assigned(stockapi) then with droporder do begin
       setresult.internalid  := 0;

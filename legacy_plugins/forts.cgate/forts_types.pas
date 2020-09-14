@@ -20,14 +20,12 @@ type
     comment                 : array[0..20] of ansichar;          // ofs: 66  size: 21
     broker_to               : array[0..20] of ansichar;          // ofs: 87  size: 21
     ext_id                  : longint;          // ofs: 108  size: 4
-    du                      : longint;          // ofs: 112  size: 4
-    date_exp                : array[0..8] of ansichar;          // ofs: 116  size: 9
+    date_exp                : array[0..8] of ansichar;          // ofs: 112  size: 9
     _pad1                   : array[0..2] of ansichar;
-    hedge                   : longint;          // ofs: 128  size: 4
-    dont_check_money        : longint;          // ofs: 132  size: 4
-    local_stamp             : tcg_time;          // ofs: 136  size: 10
-    match_ref               : array[0..10] of ansichar;          // ofs: 146  size: 11
-    ncc_request             : byte;          // ofs: 157  size: 1
+    dont_check_money        : longint;          // ofs: 124  size: 4
+    local_stamp             : tcg_time;          // ofs: 128  size: 10
+    match_ref               : array[0..10] of ansichar;          // ofs: 138  size: 11
+    ncc_request             : byte;          // ofs: 149  size: 1
   end;
 
 type
@@ -195,16 +193,23 @@ type
     capital                 : array[0..14] of byte;          // ofs: 212  size: 15
     _pad4                   : array[0..0] of ansichar;
     deal_count              : longint;          // ofs: 228  size: 4
-    old_kotir               : array[0..10] of byte;          // ofs: 232  size: 11
-    settlement_price_open   : array[0..10] of byte;          // ofs: 243  size: 11
-    _pad5                   : array[0..1] of ansichar;
-    xpos                    : int64;          // ofs: 256  size: 8
-    mod_time                : tcg_time;          // ofs: 264  size: 10
+    settlement_price_open   : array[0..10] of byte;          // ofs: 232  size: 11
+    _pad5                   : array[0..0] of ansichar;
+    xpos                    : int64;          // ofs: 244  size: 8
+    mod_time                : tcg_time;          // ofs: 252  size: 10
     _pad6                   : array[0..1] of ansichar;
-    mod_time_ns             : int64;          // ofs: 276  size: 8
-    cur_kotir               : array[0..10] of byte;          // ofs: 284  size: 11
-    market_price            : array[0..10] of byte;          // ofs: 295  size: 11
-    local_time              : tcg_time;          // ofs: 306  size: 10
+    mod_time_ns             : int64;          // ofs: 264  size: 8
+    market_price            : array[0..10] of byte;          // ofs: 272  size: 11
+    best_buy_native         : array[0..10] of byte;          // ofs: 283  size: 11
+    _pad7                   : array[0..1] of ansichar;
+    xamount_buy_native      : int64;          // ofs: 296  size: 8
+    xorders_buy_amount_native: int64;          // ofs: 304  size: 8
+    best_sell_native        : array[0..10] of byte;          // ofs: 312  size: 11
+    _pad8                   : array[0..0] of ansichar;
+    xamount_sell_native     : int64;          // ofs: 324  size: 8
+    xorders_sell_amount_native: int64;          // ofs: 332  size: 8
+    local_time              : tcg_time;          // ofs: 340  size: 10
+    price_assigned_by_admin : byte;          // ofs: 350  size: 1
   end;
 
 type
