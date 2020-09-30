@@ -20,14 +20,12 @@ type
     comment                 : array[0..20] of ansichar;          // ofs: 66  size: 21
     broker_to               : array[0..20] of ansichar;          // ofs: 87  size: 21
     ext_id                  : longint;          // ofs: 108  size: 4
-    du                      : longint;          // ofs: 112  size: 4
-    date_exp                : array[0..8] of ansichar;          // ofs: 116  size: 9
+    date_exp                : array[0..8] of ansichar;          // ofs: 112  size: 9
     _pad1                   : array[0..2] of ansichar;
-    hedge                   : longint;          // ofs: 128  size: 4
-    dont_check_money        : longint;          // ofs: 132  size: 4
-    local_stamp             : tcg_time;          // ofs: 136  size: 10
-    match_ref               : array[0..10] of ansichar;          // ofs: 146  size: 11
-    ncc_request             : byte;          // ofs: 157  size: 1
+    dont_check_money        : longint;          // ofs: 124  size: 4
+    local_stamp             : tcg_time;          // ofs: 128  size: 10
+    match_ref               : array[0..10] of ansichar;          // ofs: 138  size: 11
+    ncc_request             : byte;          // ofs: 149  size: 1
   end;
 
 type
@@ -114,10 +112,10 @@ type
     isin                    : array[0..25] of ansichar;          // ofs: 58  size: 26
     name                    : array[0..75] of ansichar;          // ofs: 84  size: 76
     inst_term               : longint;          // ofs: 160  size: 4
-    code_vcb                : array[0..25] of ansichar;          // ofs: 164  size: 26
+    base_contract_code      : array[0..25] of ansichar;          // ofs: 164  size: 26
     limit_up                : array[0..10] of byte;          // ofs: 190  size: 11
     limit_down              : array[0..10] of byte;          // ofs: 201  size: 11
-    old_kotir               : array[0..10] of byte;          // ofs: 212  size: 11
+    settlement_price_open   : array[0..10] of byte;          // ofs: 212  size: 11
     buy_deposit             : array[0..9] of byte;          // ofs: 223  size: 10
     sell_deposit            : array[0..9] of byte;          // ofs: 233  size: 10
     _pad0                   : array[0..0] of ansichar;
@@ -127,13 +125,13 @@ type
     lot_volume              : longint;          // ofs: 260  size: 4
     step_price              : array[0..10] of byte;          // ofs: 264  size: 11
     _pad2                   : array[0..0] of ansichar;
-    d_pg                    : tcg_time;          // ofs: 276  size: 10
+    last_trade_date         : tcg_time;          // ofs: 276  size: 10
     is_spread               : byte;          // ofs: 286  size: 1
     _pad3                   : array[0..0] of ansichar;
     d_exp_start             : tcg_time;          // ofs: 288  size: 10
     is_percent              : byte;          // ofs: 298  size: 1
     percent_rate            : array[0..4] of byte;          // ofs: 299  size: 5
-    last_cl_quote           : array[0..10] of byte;          // ofs: 304  size: 11
+    settlement_price        : array[0..10] of byte;          // ofs: 304  size: 11
     _pad4                   : array[0..0] of ansichar;
     signs                   : longint;          // ofs: 316  size: 4
     is_trade_evening        : byte;          // ofs: 320  size: 1
@@ -147,13 +145,18 @@ type
     step_price_curr         : array[0..10] of byte;          // ofs: 362  size: 11
     _pad6                   : array[0..0] of ansichar;
     d_start                 : tcg_time;          // ofs: 374  size: 10
-    pctyield_coeff          : array[0..10] of byte;          // ofs: 384  size: 11
-    pctyield_total          : array[0..10] of byte;          // ofs: 395  size: 11
-    d_exp_end               : tcg_time;          // ofs: 406  size: 10
-    base_contract_code      : array[0..25] of ansichar;          // ofs: 416  size: 26
-    settlement_price_open   : array[0..10] of byte;          // ofs: 442  size: 11
-    settlement_price        : array[0..10] of byte;          // ofs: 453  size: 11
-    last_trade_date         : tcg_time;          // ofs: 464  size: 10
+    sort_order              : longint;          // ofs: 384  size: 4
+    vm_calc_type            : byte;          // ofs: 388  size: 1
+    old_step_price          : array[0..10] of byte;          // ofs: 389  size: 11
+    min_step_curr           : array[0..10] of byte;          // ofs: 400  size: 11
+    _pad7                   : array[0..0] of ansichar;
+    isin_id_rd              : longint;          // ofs: 412  size: 4
+    isin_id_rb              : longint;          // ofs: 416  size: 4
+    price_intercl           : array[0..10] of byte;          // ofs: 420  size: 11
+    pctyield_coeff          : array[0..10] of byte;          // ofs: 431  size: 11
+    pctyield_total          : array[0..10] of byte;          // ofs: 442  size: 11
+    _pad8                   : array[0..0] of ansichar;
+    d_exp_end               : tcg_time;          // ofs: 454  size: 10
   end;
 
 type
@@ -190,16 +193,23 @@ type
     capital                 : array[0..14] of byte;          // ofs: 212  size: 15
     _pad4                   : array[0..0] of ansichar;
     deal_count              : longint;          // ofs: 228  size: 4
-    old_kotir               : array[0..10] of byte;          // ofs: 232  size: 11
-    settlement_price_open   : array[0..10] of byte;          // ofs: 243  size: 11
-    _pad5                   : array[0..1] of ansichar;
-    xpos                    : int64;          // ofs: 256  size: 8
-    mod_time                : tcg_time;          // ofs: 264  size: 10
+    settlement_price_open   : array[0..10] of byte;          // ofs: 232  size: 11
+    _pad5                   : array[0..0] of ansichar;
+    xpos                    : int64;          // ofs: 244  size: 8
+    mod_time                : tcg_time;          // ofs: 252  size: 10
     _pad6                   : array[0..1] of ansichar;
-    mod_time_ns             : int64;          // ofs: 276  size: 8
-    cur_kotir               : array[0..10] of byte;          // ofs: 284  size: 11
-    market_price            : array[0..10] of byte;          // ofs: 295  size: 11
-    local_time              : tcg_time;          // ofs: 306  size: 10
+    mod_time_ns             : int64;          // ofs: 264  size: 8
+    market_price            : array[0..10] of byte;          // ofs: 272  size: 11
+    best_buy_native         : array[0..10] of byte;          // ofs: 283  size: 11
+    _pad7                   : array[0..1] of ansichar;
+    xamount_buy_native      : int64;          // ofs: 296  size: 8
+    xorders_buy_amount_native: int64;          // ofs: 304  size: 8
+    best_sell_native        : array[0..10] of byte;          // ofs: 312  size: 11
+    _pad8                   : array[0..0] of ansichar;
+    xamount_sell_native     : int64;          // ofs: 324  size: 8
+    xorders_sell_amount_native: int64;          // ofs: 332  size: 8
+    local_time              : tcg_time;          // ofs: 340  size: 10
+    price_assigned_by_admin : byte;          // ofs: 350  size: 1
   end;
 
 type
@@ -216,9 +226,8 @@ type
     _pad1                   : array[0..1] of ansichar;
     moment_ns               : int64;          // ofs: 60  size: 8
     dir                     : byte;          // ofs: 68  size: 1
-    _pad2                   : array[0..0] of ansichar;
-    timestamp               : tcg_time;          // ofs: 70  size: 10
-    sess_id                 : longint;          // ofs: 80  size: 4
+    _pad2                   : array[0..2] of ansichar;
+    synth_volume            : int64;          // ofs: 72  size: 8
   end;
 
 type
@@ -232,8 +241,8 @@ type
     id_deal                 : int64;          // ofs: 32  size: 8
     xpos                    : int64;          // ofs: 40  size: 8
     xamount                 : int64;          // ofs: 48  size: 8
-    id_ord_buy              : int64;          // ofs: 56  size: 8
-    id_ord_sell             : int64;          // ofs: 64  size: 8
+    public_order_id_buy     : int64;          // ofs: 56  size: 8
+    public_order_id_sell    : int64;          // ofs: 64  size: 8
     price                   : array[0..10] of byte;          // ofs: 72  size: 11
     _pad0                   : array[0..0] of ansichar;
     moment                  : tcg_time;          // ofs: 84  size: 10
@@ -255,8 +264,8 @@ type
     id_repo                 : int64;          // ofs: 48  size: 8
     xpos                    : int64;          // ofs: 56  size: 8
     xamount                 : int64;          // ofs: 64  size: 8
-    id_ord_buy              : int64;          // ofs: 72  size: 8
-    id_ord_sell             : int64;          // ofs: 80  size: 8
+    public_order_id_buy     : int64;          // ofs: 72  size: 8
+    public_order_id_sell    : int64;          // ofs: 80  size: 8
     price                   : array[0..10] of byte;          // ofs: 88  size: 11
     _pad0                   : array[0..0] of ansichar;
     moment                  : tcg_time;          // ofs: 100  size: 10
@@ -278,6 +287,11 @@ type
     login_sell              : array[0..20] of ansichar;          // ofs: 257  size: 21
     code_rts_buy            : array[0..7] of ansichar;          // ofs: 278  size: 8
     code_rts_sell           : array[0..7] of ansichar;          // ofs: 286  size: 8
+    _pad3                   : array[0..1] of ansichar;
+    id_ord_buy              : int64;          // ofs: 296  size: 8
+    id_ord_sell             : int64;          // ofs: 304  size: 8
+    private_order_id_buy    : int64;          // ofs: 312  size: 8
+    private_order_id_sell   : int64;          // ofs: 320  size: 8
   end;
 
 type
@@ -286,11 +300,11 @@ type
     replID                  : int64;          // ofs: 0  size: 8
     replRev                 : int64;          // ofs: 8  size: 8
     replAct                 : int64;          // ofs: 16  size: 8
-    id_ord                  : int64;          // ofs: 24  size: 8
+    public_order_id         : int64;          // ofs: 24  size: 8
     sess_id                 : longint;          // ofs: 32  size: 4
     isin_id                 : longint;          // ofs: 36  size: 4
-    xamount                 : int64;          // ofs: 40  size: 8
-    xamount_rest            : int64;          // ofs: 48  size: 8
+    public_amount           : int64;          // ofs: 40  size: 8
+    public_amount_rest      : int64;          // ofs: 48  size: 8
     id_deal                 : int64;          // ofs: 56  size: 8
     xstatus                 : int64;          // ofs: 64  size: 8
     price                   : array[0..10] of byte;          // ofs: 72  size: 11
@@ -299,7 +313,7 @@ type
     _pad1                   : array[0..1] of ansichar;
     moment_ns               : int64;          // ofs: 96  size: 8
     dir                     : byte;          // ofs: 104  size: 1
-    action                  : byte;          // ofs: 105  size: 1
+    public_action           : byte;          // ofs: 105  size: 1
     deal_price              : array[0..10] of byte;          // ofs: 106  size: 11
     client_code             : array[0..7] of ansichar;          // ofs: 117  size: 8
     login_from              : array[0..20] of ansichar;          // ofs: 125  size: 21
@@ -315,6 +329,17 @@ type
     local_stamp             : tcg_time;          // ofs: 216  size: 10
     _pad4                   : array[0..1] of ansichar;
     aspref                  : longint;          // ofs: 228  size: 4
+    id_ord                  : int64;          // ofs: 232  size: 8
+    xamount                 : int64;          // ofs: 240  size: 8
+    xamount_rest            : int64;          // ofs: 248  size: 8
+    variance_amount         : int64;          // ofs: 256  size: 8
+    disclose_const_amount   : int64;          // ofs: 264  size: 8
+    action                  : byte;          // ofs: 272  size: 1
+    _pad5                   : array[0..2] of ansichar;
+    private_order_id        : int64;          // ofs: 276  size: 8
+    private_amount          : int64;          // ofs: 284  size: 8
+    private_amount_rest     : int64;          // ofs: 292  size: 8
+    private_action          : byte;          // ofs: 300  size: 1
   end;
 
 type
