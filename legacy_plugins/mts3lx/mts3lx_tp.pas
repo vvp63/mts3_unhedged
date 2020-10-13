@@ -353,19 +353,22 @@ begin
         VolMax          :=  StrToIntDef(SL[7], 0);
         VolEliminated   :=  StrToIntDef(SL[8], 0);
         BVolChangeDir   :=  StrToFloatDef(SL[9], 0);
-        Vmin            :=  StrToIntDef(SL[12], 0);
-        Vmax            :=  StrToIntDef(SL[13], 0);
-        PLmax           :=  StrToIntDef(SL[14], 0);
-        MaxVolBefore    :=  StrToIntDef(SL[15], 0);
-        PSToMove        :=  StrToIntDef(SL[16], 0);
-        VolToMove       :=  StrToIntDef(SL[17], 0);
-        HedgeMode       :=  (SL[18])[1];
-        CashShift       :=  StrToFloatDef(SL[19], 0);
         BVolChangeInv   :=  StrToFloatDef(SL[10], 0);
         BSquareKf       :=  StrToFloatDef(SL[11], 0);
-        RIntPD          :=  StrToIntDef(SL[20], 0);
-        RIntPortf       :=  StrToIntDef(SL[21], 0);
-        BSquareKfInv    :=  StrToIntDef(SL[22], 0);
+        BSquareKfInv    :=  StrToFloatDef(SL[12], 0);
+
+        Vmin            :=  StrToIntDef(SL[13], 0);
+        Vmax            :=  StrToIntDef(SL[14], 0);
+        PLmax           :=  StrToIntDef(SL[15], 0);
+        MaxVolBefore    :=  StrToIntDef(SL[16], 0);
+        PSToMove        :=  StrToIntDef(SL[17], 0);
+        VolToMove       :=  StrToIntDef(SL[18], 0);
+        HedgeMode       :=  (SL[19])[1];
+        CashShift       :=  StrToFloatDef(SL[20], 0);
+
+        RIntPD          :=  StrToIntDef(SL[21], 0);
+        RIntPortf       :=  StrToIntDef(SL[22], 0);
+
       end;
     end;
 
