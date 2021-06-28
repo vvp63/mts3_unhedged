@@ -539,9 +539,9 @@ begin
     FWaitTimeout   := max(0, readinteger (ConnName, 'timeout',           1));
     FMaxTrsAtOnce  := max(1, readinteger (ConnName, 'groupcount',        10));
 
-    FAddOrderName  :=        readstring  (ConnName, 'setorder',          'FutAddOrder');
-    FDelOrderName  :=        readstring  (ConnName, 'droporder',         'FutDelOrder');
-    FMoveOrderName :=        readstring  (ConnName, 'moveorder',         'FutMoveOrder');
+    FAddOrderName  :=        readstring  (ConnName, 'setorder',          'AddOrder');
+    FDelOrderName  :=        readstring  (ConnName, 'droporder',         'DelOrder');
+    FMoveOrderName :=        readstring  (ConnName, 'moveorder',         'MoveOrder');
 
     FReqInitStage  :=        readinteger (ConnName, 'req_init_stage',    0);
   end;
@@ -668,14 +668,15 @@ var ls  : longint;
     itm : pIsinListItem;
 begin
   result:= false;
-  if assigned(amsg) and assigned(QueueItem) and assigned(FLocalIsins) then with QueueItem^, pFutAddOrder(amsg^.data)^ do begin
+  if assigned(amsg) and assigned(QueueItem) and assigned(FLocalIsins) then with QueueItem^, pAddOrder(amsg^.data)^ do begin
     itm:= FLocalIsins.isin[order.code];
     if assigned(itm) then begin
       if fortssign(itm^.signs, flag_Spot) then ls:= 1 else ls:= itm^.lsz;
 
       if (length(fortsbrokercode) > 0) then strplcopy(broker_code, fortsbrokercode, sizeof(broker_code) - 1);
 
-      strplcopy(isin, order.code, sizeof(isin) - 1);
+      isin_id := itm^.isin_id;
+//      strplcopy(isin, order.code, sizeof(isin) - 1);
       strplcopy(client_code, system.copy(order.account, 5, max(length(order.account) - 4, 0)), sizeof(client_code) - 1);
 
       if (order.flags and opWDRest <> 0) then begin
@@ -711,11 +712,12 @@ var ls  : longint;
     itm : pIsinListItem;
 begin
   result:= false;
-  if assigned(amsg) and assigned(QueueItem) and assigned(FLocalIsins) then with QueueItem^, pFutMoveOrder(amsg^.data)^ do begin
+  if assigned(amsg) and assigned(QueueItem) and assigned(FLocalIsins) then with QueueItem^, pMoveOrder(amsg^.data)^ do begin
     itm:= FLocalIsins.isin[order.code];
     if assigned(itm) then begin
       if fortssign(itm^.signs, flag_Spot) then ls:= 1 else ls:= itm^.lsz;
 
+      isin_id   := itm^.isin_id;
       if (length(fortsbrokercode) > 0) then strplcopy(broker_code, fortsbrokercode, sizeof(broker_code) - 1);
 
       regime    := moveorder.flags;
@@ -723,10 +725,11 @@ begin
       amount1   := moveorder.new_quantity;
       strplcopy(price1, format('%.5f', [moveorder.new_price * ls]), sizeof(price1) - 1);
       ext_id1   := moveorder.transaction;
-//      order_id2 := 0;
-//      amount2   := 0;
-//      price2    := '';
-//      ext_id2   := 0;
+
+      order_id2 := 0;
+      amount2   := 0;
+      price2    := '';
+      ext_id2   := 0;
 
       result:= true;
     end;
@@ -734,12 +737,18 @@ begin
 end;
 
 function tFortsTransactionConnection.doDropOrder(amsg: pcg_msg; QueueItem: pOrderQueueItem): boolean;
+var itm : pIsinListItem;
 begin
-  if assigned(amsg) and assigned(QueueItem) then with QueueItem^, pFutDelOrder(amsg^.data)^ do begin
-    if (length(fortsbrokercode) > 0) then strplcopy(broker_code, fortsbrokercode, sizeof(broker_code) - 1);
-    order_id := orderno;
-    result:= true;
-  end else result:= false;
+  result:= false;
+  if assigned(amsg) and assigned(QueueItem) then with QueueItem^, pDelOrder(amsg^.data)^ do begin
+    itm:= FLocalIsins.isin[code];
+    if assigned(itm) then begin
+      if (length(fortsbrokercode) > 0) then strplcopy(broker_code, fortsbrokercode, sizeof(broker_code) - 1);
+      order_id := orderno;
+      isin_id  := itm^.isin_id;
+      result:= true;
+    end;
+  end;
 end;
 
 function tFortsTransactionConnection.StoreTransaction(QueueItem: pOrderQueueItem): pointer;
