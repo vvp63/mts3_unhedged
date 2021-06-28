@@ -485,21 +485,24 @@ begin
                 TEReply   := ansistring(message);
                 accepted  := soRejected;
               end;
-        101 : with pFORTS_MSG101(msg.data)^, res do begin
+        101,
+        179 : with pFORTS_MSG101(msg.data)^, res do begin
                 ExtNumber := order_id;
                 res_code  := code;
                 Quantity  := order.quantity;
                 TEReply   := ansistring(message);
                 if (res_code = 0) then accepted:= soAccepted else accepted:= soRejected;
               end;
-        102 : with pFORTS_MSG102(msg.data)^, res do begin
+        102,
+        177 : with pFORTS_MSG102(msg.data)^, res do begin
                 ExtNumber := orderno;
                 res_code  := code;
                 Quantity  := amount;
                 TEReply   := ansistring(message);
                 if (res_code = 0) then accepted:= soDropAccepted else accepted:= soDropRejected;
               end;
-        105 : with pFORTS_MSG105(msg.data)^, res do begin
+        105,
+        176 : with pFORTS_MSG105(msg.data)^, res do begin
                 res_code  := code;
                 TEReply   := ansistring(message);
 //                Quantity  := moveorder.new_quantity;
