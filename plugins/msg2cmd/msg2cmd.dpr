@@ -77,7 +77,7 @@ end;
 
 function Done: longint; cdecl;
 begin
-  executecommand = nil;
+  executecommand := nil;
   log('Plugin finished');
   result:= 0;
 end;
