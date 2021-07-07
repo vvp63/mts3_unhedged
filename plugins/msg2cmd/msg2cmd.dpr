@@ -49,7 +49,7 @@ const plugApi : tDataSourceApi           = ( plugname      : PlugName;
 procedure OnUserMessage(aFromID, aFromUserName, aText: pAnsiChar); cdecl;
 begin 
   if assigned(executecommand) then 
-    if AnsiCompareText(aFromID, 'SOLID') then executecommand(aText); 
+    if (AnsiCompareText(aFromID, 'SOLID') = 0) then executecommand(aText); 
 end;
 
 { log functions }
