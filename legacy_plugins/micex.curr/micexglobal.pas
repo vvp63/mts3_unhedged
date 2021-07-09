@@ -136,10 +136,10 @@ end;
 { common functions }
 
 procedure MicexLog(const event: string);
-begin if assigned(Server_API.LogEvent) then Server_API.LogEvent(pChar(format('MICEX: %s',[event]))); end;
+begin if assigned(Server_API.LogEvent) then Server_API.LogEvent(pChar(format('MICEXCURR: %s',[event]))); end;
 
 procedure MicexLog(const event: string; const params: array of const);
-begin if assigned(Server_API.LogEvent) then Server_API.LogEvent(pChar(format('MICEX: ' + event, params))); end;
+begin if assigned(Server_API.LogEvent) then Server_API.LogEvent(pChar(format('MICEXCURR: ' + event, params))); end;
 
 
 procedure MicexSynchronizeTime(amicextime: tDateTime);
