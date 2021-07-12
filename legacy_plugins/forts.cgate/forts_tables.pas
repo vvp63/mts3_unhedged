@@ -905,7 +905,7 @@ begin
           1    : ord.status := statusval[ord.balance = 0];
           2    : begin
                    ord.status := statusval[ord.balance = 0];
-                   
+
                    // fill trade
                    trd.transaction:= ord.transaction;
                    trd.internalid := ord.internalid;
@@ -919,13 +919,13 @@ begin
                    trd.account    := ord.account;
                    trd.price      := cg_utils_get_bcd(deal_price) / ls;
                    trd.quantity   := ord.quantity;
-                   trd.value      := ord.value;
+                   trd.value      := (trd.price * lsz) * trd.quantity;
 //                   trd.accr
 //                   trd.clientid
 //                   trd.tradetype
 //                   trd.settlecode
                    trd.comment    := ord.comment;
-                   
+
                    server_api.AddTradesRec(trd, [trd_stock_id,trd_tradeno,trd_orderno,trd_tradetime,trd_level,
                                                  trd_code,trd_buysell,trd_account,trd_price,trd_quantity,trd_value,
                                                  trd_comment]);
