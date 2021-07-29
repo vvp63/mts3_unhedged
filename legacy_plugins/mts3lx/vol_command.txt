@@ -1,0 +1,42 @@
+      if (paramlow[0] = 'vol') then begin
+        if assigned(AllQueue) then begin
+          vqueue.evTime:=  Now; vqueue.evType:= ev_type_command; vqueue.evCommand:= 'vol';
+          AllQueue.push(vqueue);
+        end;
+      end;
+
+
+
+        ev_type_command   : begin
+                              vexstep :=  7;
+                              if evCommand = 'i' then
+                                  if assigned(TPList) and not TPList.LoadAllParams then
+                                      msglog('Problems with TP params (Bdir > Binv)', []);
+                              if evCommand = 'vol' then
+                                if assigned(TPList) then TPList.ReloadVols(-1);
+
+                            end;
+
+
+
+
+
+
+
+
+
+procedure tTPList.ReloadVols(atpid: longint);
+var i, vvol   : longint;
+    vchanged  : boolean;
+begin
+  with locklist do try
+    for i:= 0 to Count - 1 do with pTP(Items[i])^ do if ( (TPId = atpid) or (atpid = -1)) then begin
+      vvol:=  TPSecList.GetQtys(TPId, vchanged);
+      RecountBwithV;
+      if vchanged then begin
+        if (-vvol >= TPParams.VolMax) then msglog('TP %d (%s) VolMax(%d) reached', [TPId, Name, TPParams.VolMax]);
+        if (vvol >= -TPParams.VolEliminated) then msglog('TP %d (%s) VolEliminated(%d) reached', [TPId, Name, TPParams.VolEliminated]);
+      end;
+    end;
+  finally unlocklist; end;
+end;
