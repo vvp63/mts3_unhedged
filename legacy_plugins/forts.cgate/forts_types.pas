@@ -186,25 +186,26 @@ type
     _pad3                   : array[0..2] of ansichar;
     xcontr_count            : int64;          // ofs: 204  size: 8
     capital                 : array[0..14] of byte;          // ofs: 212  size: 15
-    _pad4                   : array[0..0] of ansichar;
-    deal_count              : longint;          // ofs: 228  size: 4
-    settlement_price_open   : array[0..10] of byte;          // ofs: 232  size: 11
+    total_premium_volume    : array[0..14] of byte;          // ofs: 227  size: 15
+    _pad4                   : array[0..1] of ansichar;
+    deal_count              : longint;          // ofs: 244  size: 4
+    settlement_price_open   : array[0..10] of byte;          // ofs: 248  size: 11
     _pad5                   : array[0..0] of ansichar;
-    xpos                    : int64;          // ofs: 244  size: 8
-    mod_time                : tcg_time;          // ofs: 252  size: 10
+    xpos                    : int64;          // ofs: 260  size: 8
+    mod_time                : tcg_time;          // ofs: 268  size: 10
     _pad6                   : array[0..1] of ansichar;
-    mod_time_ns             : int64;          // ofs: 264  size: 8
-    market_price            : array[0..10] of byte;          // ofs: 272  size: 11
-    best_buy_native         : array[0..10] of byte;          // ofs: 283  size: 11
-    _pad7                   : array[0..1] of ansichar;
-    xamount_buy_native      : int64;          // ofs: 296  size: 8
-    xorders_buy_amount_native: int64;          // ofs: 304  size: 8
-    best_sell_native        : array[0..10] of byte;          // ofs: 312  size: 11
+    mod_time_ns             : int64;          // ofs: 280  size: 8
+    market_price            : array[0..10] of byte;          // ofs: 288  size: 11
+    price_assigned_by_admin : byte;          // ofs: 299  size: 1
+    local_time              : tcg_time;          // ofs: 300  size: 10
+    best_buy_native         : array[0..10] of byte;          // ofs: 310  size: 11
+    _pad7                   : array[0..2] of ansichar;
+    xamount_buy_native      : int64;          // ofs: 324  size: 8
+    xorders_buy_amount_native: int64;          // ofs: 332  size: 8
+    best_sell_native        : array[0..10] of byte;          // ofs: 340  size: 11
     _pad8                   : array[0..0] of ansichar;
-    xamount_sell_native     : int64;          // ofs: 324  size: 8
-    xorders_sell_amount_native: int64;          // ofs: 332  size: 8
-    local_time              : tcg_time;          // ofs: 340  size: 10
-    price_assigned_by_admin : byte;          // ofs: 350  size: 1
+    xamount_sell_native     : int64;          // ofs: 352  size: 8
+    xorders_sell_amount_native: int64;          // ofs: 360  size: 8
   end;
 
 type
