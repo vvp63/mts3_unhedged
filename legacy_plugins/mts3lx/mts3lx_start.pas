@@ -225,26 +225,33 @@ begin
           vqueue.evTime:=  Now; vqueue.evType:= ev_type_command; vqueue.evCommand:= 'vol';
           AllQueue.push(vqueue);
         end;
+        msglog(fromid, fromuser, 'Get Vol command', []);
       end;
 
       if (paramlow[0] = 'start') then begin
         gGlobalHedgeStatus := true;  gGlobalOrderStatus  :=  true;
+      //  msglog(fromid, fromuser, 'start ok', []);
       end;
 
       if (paramlow[0] = 'stop') then begin
         gGlobalOrderStatus  :=  false;
+     //   msglog(fromid, fromuser, 'stop ok', []);
       end;
 
       if (paramlow[0] = 'log') then begin
         gLogLevel := StrToIntDef(paramlow[1], gLogLevel);
         FileLog('MTS_ParseCommand SetLogLevel %d',[gLogLevel], 0);
+     //   msglog(fromid, fromuser, 'Set Log level %d', [gLogLevel]);
       end;
 
 
       if (paramlow[0] = 'reloadmts3') then begin
 
         vrelcode  :=  StrToIntDef(paramlow[1], 0);
-        if (vrelcode = ReloadApproveCode) then MTS_ReloadMTS
+        if (vrelcode = ReloadApproveCode) then begin
+          MTS_ReloadMTS;
+       //   msglog(fromid, fromuser, 'MTS3 reloaded', []);
+        end
         else begin
           ReloadApproveCode := 100 + Random(900);
           msglog(fromid, fromuser, 'MTS3 reload code %d', [ReloadApproveCode]);
@@ -252,29 +259,28 @@ begin
 
       end;
 
-      {
+
       if (paramlow[0] = 'starthedge') then begin
         gGlobalHedgeStatus := true;
-        msglog(fromid, fromuser, 'Hedge is ON', [ReloadApproveCode]);
+       // msglog(fromid, fromuser, 'Hedge is ON', []);
       end;
 
       if (paramlow[0] = 'stophedge') then begin
         gGlobalHedgeStatus  :=  false;
-        msglog(fromid, fromuser, 'Hedge is OFF', [ReloadApproveCode]);
+       // msglog(fromid, fromuser, 'Hedge is OFF', []);
       end;
-
 
       if (paramlow[0] = 'starthedgepd') then begin
         gUseHedgePD := true;
-        msglog(fromid, fromuser, 'HedgePD is ON', [ReloadApproveCode]);
+       // msglog(fromid, fromuser, 'HedgePD is ON', []);
       end;
 
       if (paramlow[0] = 'stophedgepd') then begin
         gUseHedgePD  :=  false;
-        msglog(fromid, fromuser, 'HedgePD is OFF', [ReloadApproveCode]);
+       // msglog(fromid, fromuser, 'HedgePD is OFF', []);
       end;
 
-      }
+
 
 
 
