@@ -230,12 +230,12 @@ begin
 
       if (paramlow[0] = 'start') then begin
         gGlobalHedgeStatus := true;  gGlobalOrderStatus  :=  true;
-      //  msglog(fromid, fromuser, 'start ok', []);
+        msglog(fromid, fromuser, 'Started', []);
       end;
 
       if (paramlow[0] = 'stop') then begin
         gGlobalOrderStatus  :=  false;
-     //   msglog(fromid, fromuser, 'stop ok', []);
+        msglog(fromid, fromuser, 'Stoped', []);
       end;
 
       if (paramlow[0] = 'log') then begin
@@ -272,12 +272,14 @@ begin
 
       if (paramlow[0] = 'starthedgepd') then begin
         gUseHedgePD := true;
-       // msglog(fromid, fromuser, 'HedgePD is ON', []);
+        FileLog('MTS_ParseCommand starthedgepd', [], 1);
+        msglog(fromid, fromuser, 'HedgePD is ON', []);
       end;
 
       if (paramlow[0] = 'stophedgepd') then begin
         gUseHedgePD  :=  false;
-       // msglog(fromid, fromuser, 'HedgePD is OFF', []);
+        FileLog('MTS_ParseCommand stophedgepd', [], 1);
+        msglog(fromid, fromuser, 'HedgePD is OFF', []);
       end;
 
 
@@ -299,12 +301,12 @@ begin
         if (vrelcode = 1) then UsePDRehedge := true else UsePDRehedge := false;
         msglog(fromid, fromuser, 'Rehedging PD status %d', [vrelcode]);
       end;
-
+      }
       if (paramlow[0] = 'reloadpdkf') then begin
         PDReloadKfCommand  :=  StrToIntDef(paramlow[1], 0);
         msglog(fromid, fromuser, 'Reloading HedgeKf for TP %d', [PDReloadKfCommand]);
       end;
-      }
+      
 
       result:= 0;
       
