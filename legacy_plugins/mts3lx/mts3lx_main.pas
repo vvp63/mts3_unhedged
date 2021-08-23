@@ -95,6 +95,7 @@ end;
 function  MTS3_DBConnect: longint; stdcall;
 var vParamValue : string;
     pghost,pgport,pgoptions,pgtty,dbname,login,pwd : Pchar;
+    vUserCount, i  : longint;
 begin
 
   pghost := NiL;
@@ -112,6 +113,13 @@ begin
     login   :=  PChar(ReadString('db', 'login', ''));
     pwd     :=  PChar(ReadString('db', 'pwd', ''));
     gLogLevel :=  StrToIntDef(ReadString('settings', 'loglevel', ''), 2);
+
+    vUserCount        :=  StrToIntDef(ReadString('clientmessage', 'usercount', ''), 0);
+    DefaultToId       :=  PChar(ReadString('clientmessage', 'clientid', ''));
+    SetLength(DefaultToUser, vUserCount);
+    for i:=low(DefaultToUser) to high(DefaultToUser) do
+      DefaultToUser[i] :=  PChar(ReadString('clientmessage', format('clientuser%d', [i + 1]), ''));
+
   end;
 
   log('MTS3_DBConnect  : LogLevel = %d', [gLogLevel]);

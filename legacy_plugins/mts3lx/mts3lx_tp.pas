@@ -349,6 +349,7 @@ begin
         BinverseDB      :=  StrToFloatDef(SL[6], 0);
         if (BdirectDB >= BinverseDB) then begin
           BdirectDB:= vbd; BinverseDB:= vbi; Result:=  false;
+          msglog('TP %d Params Error BDirect >= BInverse', [TPId]);
         end;
         VolMax          :=  StrToIntDef(SL[7], 0);
         VolEliminated   :=  StrToIntDef(SL[8], 0);
@@ -1173,12 +1174,12 @@ begin
       vvol:=  TPSecList.GetQtys(TPId, vchanged);
       RecountBwithV;
   //  TODO  unblock
-  {
+
       if vchanged then begin
         if (-vvol >= TPParams.VolMax) then msglog('TP %d (%s) VolMax(%d) reached', [TPId, Name, TPParams.VolMax]);
         if (vvol >= -TPParams.VolEliminated) then msglog('TP %d (%s) VolEliminated(%d) reached', [TPId, Name, TPParams.VolEliminated]);
       end;
-      }
+
     end;
   finally unlocklist; end;
 end;
