@@ -1,18 +1,18 @@
 /*
  Navicat Premium Data Transfer
 
- Source Server         : Aquila
+ Source Server         : Aquila collo
  Source Server Type    : PostgreSQL
- Source Server Version : 100010
+ Source Server Version : 120008
  Source Host           : localhost:5432
- Source Catalog        : MTS3pg
+ Source Catalog        : mts3pg
  Source Schema         : Arch
 
  Target Server Type    : PostgreSQL
- Target Server Version : 100010
+ Target Server Version : 120008
  File Encoding         : 65001
 
- Date: 29/04/2021 16:21:40
+ Date: 01/09/2021 11:34:04
 */
 
 
