@@ -38,7 +38,9 @@ const
       gIniFile      : TIniFile    = nil;
       gPGConn       : PPGConn     = nil;
 
+const
       gLogFileTempl : string      = 'mts3lx_%s.log';
+      gLogFileName  : string      = 'mts3lx_.log';
       gLogLevel     : longint     = 2;
 
 const

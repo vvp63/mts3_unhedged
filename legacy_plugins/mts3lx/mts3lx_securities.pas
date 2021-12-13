@@ -91,7 +91,7 @@ type tSec  = class(TObject)
     procedure GetTradeParams;
     function  BasePrice(avol  : longint; aquote : char; alastdeal : boolean = false) : real;
     function  AdditionPrice(avol: real; aquote: char; alastdeal : boolean = false) : real;
-    function  IsActive  : boolean;
+    function  IsActive(alog: boolean = true)  : boolean;
     function  NormalizePrice(aprice : real) : real;
 end;
 
@@ -346,7 +346,7 @@ begin
   end;
 end;
 
-function tSec.IsActive: boolean;
+function tSec.IsActive(alog: boolean = true): boolean;
 begin
   if TradeParams.ForcedActivity OR
     (
@@ -358,7 +358,7 @@ begin
     ) then
     result:=  true else result:=  false;    
 
-  FileLog('tSec.IsActive %s = %s (Forced = %s) (%.6g %.6g %.6g) %d %d  last=%.6g (%d %.6g - %.6g)',
+  if alog then FileLog('tSec.IsActive %s = %s (Forced = %s) (%.6g %.6g %.6g) %d %d  last=%.6g (%d %.6g - %.6g)',
           [code, BoolToStr(Result, true), BoolToStr(TradeParams.ForcedActivity, true), Now, LastQuoteTime, LastParamTime,
           Params.lotsize, TradeParams.LotSize, Params.lastdealprice, stockid, Params.limitpricelow, Params.limitpricehigh], 3);
 end;

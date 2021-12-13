@@ -741,7 +741,7 @@ begin
 
     for i:= 0 to Count - 1 do with pTPSec(Items[i])^ do begin
 
-      if Sec^.IsActive then begin
+      if Sec^.IsActive(false) then begin
 
         vAvgToadd:=   Sec.Params.lastdealprice;
 

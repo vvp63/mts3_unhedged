@@ -170,8 +170,7 @@ begin
   ExeFileName   := expandfilename(alibname);
   ExeFilePath   := includetrailingbackslash(extractfilepath(ExeFileName));
   gIniFileName  := ExeFilePath + gIniFileName;
-  gLogFileTempl :=  ExeFilePath + format(gLogFileTempl, [FormatDateTime('h_m_s', Now)]);
-
+  gLogFileName  := ExeFilePath + format(gLogFileTempl, [FormatDateTime('h_m_s', Now)]);
   InitMTSLogger;
   cmdintf:= tCmdInterface.create;
   log('MTS3LX_START. InitEx', []);
