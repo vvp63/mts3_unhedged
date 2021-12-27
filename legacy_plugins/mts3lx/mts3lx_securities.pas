@@ -270,10 +270,12 @@ end;
 
 procedure tSec.LogQuotes;
 var vas, vbs  : string;
+    vbia  : boolean;
 begin
   if assigned(Ask) then vas:= Ask.GetLog else vas:= '';
   if assigned(Bid) then vbs:= Bid.GetLog else vbs:= '';
   FileLog('%s Bid %s Ask %s', [code, vbs, vas], 3);
+ // vbia := IsActive();
 end;
 
 procedure tSec.GetTradeParams;

@@ -439,7 +439,6 @@ begin
     DirectInverseQuote('B', vBaseSec, vVolB, vPriceB, not (vactinday and vfullhedged));
   end;
      
-     
   FileLog('QR [%d %s]  S=%.6g(%d)  B=%.6g(%d) day=%s(%s)',
               [TPId, Name, vPriceS, vVolS, vPriceB, vVolB, BoolToStr(vinday, true), BoolToStr(vactinday, true)], 1);
             
@@ -486,8 +485,8 @@ begin
         filelog('DI [%d %s] %s Need to drop or remove order %d %d (%.6g/%d) (%.6g/%d) status=%s distatus=%s',
                     [TPId, Name, aBuySell, vtransid, vorderno, vprice, vquantity, aprice, avol,
                      BoolToStr(gGlobalOrderStatus, true), BoolToStr(vDIStatus, true)], 3);
-        if (vorderno > 0) and ( (now - vdroptime) > 1 * SecDelay) and assigned(OTManager) then begin
-          if (avol > 0) and (aprice > 0) and vMoveByPrice
+        if (vorderno > 0) and ( (now - vdroptime) > 0.3 * SecDelay) and assigned(OTManager) then begin
+          if (avol > 0) and (aprice > 0) and vMoveByPrice and vDIStatus and vBeforeFlag
                               then OTManager.MoveMyOrder(vorderno, TPId, vtransid, aBaseSec^.Sec, aBaseSec^.Account, aBuySell, aprice, avol)       //  перестановка
                               else OTManager.DropOrder(vtransid, vorderno, aBaseSec^.Sec, aBaseSec^.Account);                            //  снятие
         end;
@@ -499,7 +498,7 @@ begin
                 [TPId, Name, aBuySell, aBaseSec^.Sec.code, FormatDateTime('dd.mm.yyyy hh:nn:ss.zzz', aBaseSec^.LastRejTime)], 2);
 
       if gGlobalOrderStatus and (not aonlydrop) and vDIStatus and vBeforeFlag
-            and (avol > 0) and ( (now - aBaseSec^.LastRejTime) > 2 * SecDelay) then begin
+            and (avol > 0) and ( (now - aBaseSec^.LastRejTime) > 1 * SecDelay) then begin
         if assigned(OTManager) then OTManager.SetMyOrder(TPId, aBaseSec^.Sec, aBaseSec^.Account, aBuySell, aprice, avol);
       end;
 
@@ -741,7 +740,7 @@ begin
 
     for i:= 0 to Count - 1 do with pTPSec(Items[i])^ do begin
 
-      if Sec^.IsActive(false) then begin
+      if Sec^.IsActive(ashowquotes) then begin
 
         vAvgToadd:=   Sec.Params.lastdealprice;
 
