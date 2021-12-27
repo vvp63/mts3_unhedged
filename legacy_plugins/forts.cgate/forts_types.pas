@@ -7,40 +7,42 @@ uses cgate;
 // --- transactions ----------------------------------------------
 
 type
-  pFutAddOrder              = ^tFutAddOrder;
-  tFutAddOrder              = packed record
+  pAddOrder                 = ^tAddOrder;
+  tAddOrder                 = packed record
     broker_code             : array[0..4] of ansichar;          // ofs: 0  size: 5
-    isin                    : array[0..25] of ansichar;          // ofs: 5  size: 26
-    client_code             : array[0..3] of ansichar;          // ofs: 31  size: 4
-    _pad0                   : array[0..0] of ansichar;
-    type_                   : longint;          // ofs: 36  size: 4
-    dir                     : longint;          // ofs: 40  size: 4
-    amount                  : longint;          // ofs: 44  size: 4
-    price                   : array[0..17] of ansichar;          // ofs: 48  size: 18
-    comment                 : array[0..20] of ansichar;          // ofs: 66  size: 21
-    broker_to               : array[0..20] of ansichar;          // ofs: 87  size: 21
-    ext_id                  : longint;          // ofs: 108  size: 4
-    date_exp                : array[0..8] of ansichar;          // ofs: 112  size: 9
+    _pad0                   : array[0..2] of ansichar;
+    isin_id                 : longint;          // ofs: 8  size: 4
+    client_code             : array[0..3] of ansichar;          // ofs: 12  size: 4
+    dir                     : longint;          // ofs: 16  size: 4
+    type_                   : longint;          // ofs: 20  size: 4
+    amount                  : longint;          // ofs: 24  size: 4
+    price                   : array[0..17] of ansichar;          // ofs: 28  size: 18
+    comment                 : array[0..20] of ansichar;          // ofs: 46  size: 21
+    broker_to               : array[0..20] of ansichar;          // ofs: 67  size: 21
+    ext_id                  : longint;          // ofs: 88  size: 4
+    is_check_limit          : longint;          // ofs: 92  size: 4
+    date_exp                : array[0..8] of ansichar;          // ofs: 96  size: 9
     _pad1                   : array[0..2] of ansichar;
-    dont_check_money        : longint;          // ofs: 124  size: 4
-    local_stamp             : tcg_time;          // ofs: 128  size: 10
-    match_ref               : array[0..10] of ansichar;          // ofs: 138  size: 11
-    ncc_request             : byte;          // ofs: 149  size: 1
+    dont_check_money        : longint;          // ofs: 108  size: 4
+    match_ref               : array[0..10] of ansichar;          // ofs: 112  size: 11
+    ncc_request             : byte;          // ofs: 123  size: 1
   end;
 
 type
-  pFutDelOrder              = ^tFutDelOrder;
-  tFutDelOrder              = packed record
+  pDelOrder                 = ^tDelOrder;
+  tDelOrder                 = packed record
     broker_code             : array[0..4] of ansichar;          // ofs: 0  size: 5
     _pad0                   : array[0..2] of ansichar;
     order_id                : int64;          // ofs: 8  size: 8
-    local_stamp             : tcg_time;          // ofs: 16  size: 10
-    ncc_request             : byte;          // ofs: 26  size: 1
+    ncc_request             : byte;          // ofs: 16  size: 1
+    client_code             : array[0..3] of ansichar;          // ofs: 17  size: 4
+    _pad1                   : array[0..2] of ansichar;
+    isin_id                 : longint;          // ofs: 24  size: 4
   end;
 
 type
-  pFutMoveOrder             = ^tFutMoveOrder;
-  tFutMoveOrder             = packed record
+  pMoveOrder                = ^tMoveOrder;
+  tMoveOrder                = packed record
     broker_code             : array[0..4] of ansichar;          // ofs: 0  size: 5
     _pad0                   : array[0..2] of ansichar;
     regime                  : longint;          // ofs: 8  size: 4
@@ -54,8 +56,11 @@ type
     price2                  : array[0..17] of ansichar;          // ofs: 60  size: 18
     _pad2                   : array[0..1] of ansichar;
     ext_id2                 : longint;          // ofs: 80  size: 4
-    local_stamp             : tcg_time;          // ofs: 84  size: 10
-    ncc_request             : byte;          // ofs: 94  size: 1
+    is_check_limit          : longint;          // ofs: 84  size: 4
+    ncc_request             : byte;          // ofs: 88  size: 1
+    client_code             : array[0..3] of ansichar;          // ofs: 89  size: 4
+    _pad3                   : array[0..2] of ansichar;
+    isin_id                 : longint;          // ofs: 96  size: 4
   end;
 
 type
@@ -143,20 +148,10 @@ type
     step_price_clr          : array[0..10] of byte;          // ofs: 340  size: 11
     step_price_interclr     : array[0..10] of byte;          // ofs: 351  size: 11
     step_price_curr         : array[0..10] of byte;          // ofs: 362  size: 11
+    pctyield_coeff          : array[0..10] of byte;          // ofs: 373  size: 11
+    pctyield_total          : array[0..10] of byte;          // ofs: 384  size: 11
     _pad6                   : array[0..0] of ansichar;
-    d_start                 : tcg_time;          // ofs: 374  size: 10
-    sort_order              : longint;          // ofs: 384  size: 4
-    vm_calc_type            : byte;          // ofs: 388  size: 1
-    old_step_price          : array[0..10] of byte;          // ofs: 389  size: 11
-    min_step_curr           : array[0..10] of byte;          // ofs: 400  size: 11
-    _pad7                   : array[0..0] of ansichar;
-    isin_id_rd              : longint;          // ofs: 412  size: 4
-    isin_id_rb              : longint;          // ofs: 416  size: 4
-    price_intercl           : array[0..10] of byte;          // ofs: 420  size: 11
-    pctyield_coeff          : array[0..10] of byte;          // ofs: 431  size: 11
-    pctyield_total          : array[0..10] of byte;          // ofs: 442  size: 11
-    _pad8                   : array[0..0] of ansichar;
-    d_exp_end               : tcg_time;          // ofs: 454  size: 10
+    d_exp_end               : tcg_time;          // ofs: 396  size: 10
   end;
 
 type
@@ -191,25 +186,26 @@ type
     _pad3                   : array[0..2] of ansichar;
     xcontr_count            : int64;          // ofs: 204  size: 8
     capital                 : array[0..14] of byte;          // ofs: 212  size: 15
-    _pad4                   : array[0..0] of ansichar;
-    deal_count              : longint;          // ofs: 228  size: 4
-    settlement_price_open   : array[0..10] of byte;          // ofs: 232  size: 11
+    total_premium_volume    : array[0..14] of byte;          // ofs: 227  size: 15
+    _pad4                   : array[0..1] of ansichar;
+    deal_count              : longint;          // ofs: 244  size: 4
+    settlement_price_open   : array[0..10] of byte;          // ofs: 248  size: 11
     _pad5                   : array[0..0] of ansichar;
-    xpos                    : int64;          // ofs: 244  size: 8
-    mod_time                : tcg_time;          // ofs: 252  size: 10
+    xpos                    : int64;          // ofs: 260  size: 8
+    mod_time                : tcg_time;          // ofs: 268  size: 10
     _pad6                   : array[0..1] of ansichar;
-    mod_time_ns             : int64;          // ofs: 264  size: 8
-    market_price            : array[0..10] of byte;          // ofs: 272  size: 11
-    best_buy_native         : array[0..10] of byte;          // ofs: 283  size: 11
-    _pad7                   : array[0..1] of ansichar;
-    xamount_buy_native      : int64;          // ofs: 296  size: 8
-    xorders_buy_amount_native: int64;          // ofs: 304  size: 8
-    best_sell_native        : array[0..10] of byte;          // ofs: 312  size: 11
+    mod_time_ns             : int64;          // ofs: 280  size: 8
+    market_price            : array[0..10] of byte;          // ofs: 288  size: 11
+    price_assigned_by_admin : byte;          // ofs: 299  size: 1
+    local_time              : tcg_time;          // ofs: 300  size: 10
+    best_buy_native         : array[0..10] of byte;          // ofs: 310  size: 11
+    _pad7                   : array[0..2] of ansichar;
+    xamount_buy_native      : int64;          // ofs: 324  size: 8
+    xorders_buy_amount_native: int64;          // ofs: 332  size: 8
+    best_sell_native        : array[0..10] of byte;          // ofs: 340  size: 11
     _pad8                   : array[0..0] of ansichar;
-    xamount_sell_native     : int64;          // ofs: 324  size: 8
-    xorders_sell_amount_native: int64;          // ofs: 332  size: 8
-    local_time              : tcg_time;          // ofs: 340  size: 10
-    price_assigned_by_admin : byte;          // ofs: 350  size: 1
+    xamount_sell_native     : int64;          // ofs: 352  size: 8
+    xorders_sell_amount_native: int64;          // ofs: 360  size: 8
   end;
 
 type
@@ -353,6 +349,7 @@ type
     event_type              : longint;          // ofs: 36  size: 4
     message                 : array[0..64] of ansichar;          // ofs: 40  size: 65
   end;
+
 
 type
   pusd_online               = ^tusd_online;

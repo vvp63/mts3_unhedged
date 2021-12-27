@@ -747,7 +747,7 @@ begin
 
         if (strlen(code_sell) > 0) then begin
           trd.transaction := ext_id_sell;
-          trd.orderno     := id_ord_sell;
+          trd.orderno     := public_order_id_sell;
           trd.buysell     := 'S';
           trd.account     := ClientCodeToAccount(level_futures, code_sell);
           trd.comment     := comment_sell;
@@ -759,7 +759,7 @@ begin
 
         if (strlen(code_buy) > 0) then begin
           trd.transaction := ext_id_buy;
-          trd.orderno     := id_ord_buy;
+          trd.orderno     := public_order_id_buy;
           trd.buysell     := 'B';
           trd.account     := ClientCodeToAccount(level_futures, code_buy);
           trd.comment     := comment_buy;
@@ -884,20 +884,20 @@ begin
         ord.stock_id    := GetFortsStockID;
         ord.level       := level_futures;
         ord.code        := code;
-        ord.orderno     := id_ord;
+        ord.orderno     := public_order_id;
         ord.ordertime   := cg_utils_get_time(moment);
         ord.buysell     := buysellval[(dir = 1)];
         ord.account     := ClientCodeToAccount(level_futures, client_code);
         ord.price       := cg_utils_get_bcd(price) / ls;
-        ord.quantity    := xamount;
+        ord.quantity    := public_amount;
         ord.value       := (ord.price * lsz) * ord.quantity;
 //        ord.clientid    :=
-        ord.balance     := xamount_rest;
+        ord.balance     := public_amount_rest;
 //        ord.ordertype   :=
 //        ord.settlecode  :=
         ord.comment     := comment;
 
-        case action of
+        case public_action of
           0    : begin
                    ord.status  := 'W';
                    ord.balance := ord.quantity;
@@ -905,7 +905,7 @@ begin
           1    : ord.status := statusval[ord.balance = 0];
           2    : begin
                    ord.status := statusval[ord.balance = 0];
-                   
+
                    // fill trade
                    trd.transaction:= ord.transaction;
                    trd.internalid := ord.internalid;
@@ -919,13 +919,13 @@ begin
                    trd.account    := ord.account;
                    trd.price      := cg_utils_get_bcd(deal_price) / ls;
                    trd.quantity   := ord.quantity;
-                   trd.value      := ord.value;
+                   trd.value      := (trd.price * lsz) * trd.quantity;
 //                   trd.accr
 //                   trd.clientid
 //                   trd.tradetype
 //                   trd.settlecode
                    trd.comment    := ord.comment;
-                   
+
                    server_api.AddTradesRec(trd, [trd_stock_id,trd_tradeno,trd_orderno,trd_tradetime,trd_level,
                                                  trd_code,trd_buysell,trd_account,trd_price,trd_quantity,trd_value,
                                                  trd_comment]);
