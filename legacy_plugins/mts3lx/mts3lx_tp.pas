@@ -615,7 +615,6 @@ begin
       end;
       result:=  false;
 
-      
     end;
 
   end;
@@ -749,7 +748,7 @@ begin
         //  Базовая бумага
         if TPSecType  = 'B' then begin
           vLotSize  := Sec^.TradeParams.LotSize;
-          if (Sec^.stockid = 4) then vLotSize :=  1;
+          if ( (Sec^.stockid = 4) or (Sec^.stockid = 5) ) then vLotSize :=  1;
           vATmp :=  Sec^.BasePrice(avol, 'A') * vLotSize; if (vATmp > 0) then aAb  :=  vATmp;
           vBTmp :=  Sec^.BasePrice(avol, 'B') * vLotSize; if (vBTmp > 0) then aBb  :=  vBTmp;
           if not vPDfound then aPD :=  GetSecPD(SecId);
