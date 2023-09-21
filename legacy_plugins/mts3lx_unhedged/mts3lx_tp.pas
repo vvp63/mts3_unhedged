@@ -38,8 +38,9 @@ type  pTPSec  = ^tTPSec;
         PDToSecId   : longint;
         Account     : tAccount;
         //  Количества
-        Qty         : longint;
-        QtyNeed     : longint;
+        Qty             : longint;
+        QtyNeed         : longint;
+        QtyBaseHedged   : longint;  //  Количество базового актива реально захеджированного данной бумагой
         //  Время последнего реджекта с биржи по бумаге
         LastRejTime : TDateTime;
         //  По усреднению
@@ -71,6 +72,8 @@ type tTPTradeParams  = record
         PSToMove        : Longint;
         VolToMove       : longint;
         HedgeMode       : char;
+        Vunhedged       : longint;
+        Kunhedged       : real;
         CashShift       : real;
         RIntPD          : longint;
         RIntPortf       : longint;
@@ -115,6 +118,8 @@ type tTP = class(TObject)
       private
         //    Хеджирование
         function    FullHedging(aBaseSec  : pTPSec) : boolean;
+        //    Неполное Хеджирование
+        function    NotFullHedging(aBaseSec  : pTPSec) : boolean;
         //    Котирование в прямую сторону
         procedure   DirectInverseQuote(aBuySell : char; aBaseSec  : pTPSec; var avol  : longint; var aprice : real; aonlydrop : boolean = false);
         //    Получаем прайсдрайвер бумаги
@@ -133,7 +138,7 @@ type tTP = class(TObject)
         //  Пересчитываем базисы в соответствии с объемами
         procedure   RecountBwithV;
         //  Считаем необходимые количества для хеджа
-        procedure   CountQtysNeed(aBaseSec: pTPSec);
+        procedure   CountQtysNeed(aBaseSec: pTPSec; var aBaseQty : longint);
         //  считаем параметры направления
         procedure   DirectionParams(aBuySell : char; aBaseSec  : pTPSec; aprice : real;
                                        var avol : longint; var aBeforeFlag, aDIstatus : boolean);
@@ -370,6 +375,9 @@ begin
         RIntPD          :=  StrToIntDef(SL[21], 0);
         RIntPortf       :=  StrToIntDef(SL[22], 0);
 
+        Vunhedged       :=  0;
+        Kunhedged       :=  0;
+
       end;
     end;
 
@@ -430,10 +438,14 @@ begin
   end;
 
   if TPSecList.GetBaseSec(vBaseSec) and assigned(vBaseSec) then begin
-    if gGlobalHedgeStatus and vinday then vfullhedged:= FullHedging(vBaseSec) else vfullhedged:= false;
-    FileLog('Q gtss=%s ghs=%s id=%s ida=%s fh=%s',
+
+    if gGlobalHedgeStatus and vinday then begin
+      if (TPParams.HedgeMode <> 'N') then vfullhedged:= FullHedging(vBaseSec) else vfullhedged:= NotFullHedging(vBaseSec);
+    end else vfullhedged:= false;
+
+    FileLog('Q gtss=%s ghs=%s id=%s ida=%s HM=%s fh=%s',
           [BoolToStr(GlobalTradeSessionStarted, true), BoolToStr(gGlobalHedgeStatus, true), BoolToStr(vinday, true),
-          BoolToStr(vactinday, true), BoolToStr(vfullhedged, true)], 3);
+          BoolToStr(vactinday, true), TPParams.HedgeMode, BoolToStr(vfullhedged, true)], 3);
 
     DirectInverseQuote('S', vBaseSec, vVolS, vPriceS, not (vactinday and vfullhedged));
     DirectInverseQuote('B', vBaseSec, vVolB, vPriceB, not (vactinday and vfullhedged));
@@ -470,9 +482,7 @@ begin
                   [TPId, Name, aBuySell, BoolToStr(aonlydrop, true), avol, aprice], 2);
     vtransid:=  0;
 
-    
     if assigned(OTManager) then vtransid:=  OTManager.HasActive(aBuySell, TPId, aBaseSec^.SecId, vprice, vquantity, vorderno, vdroptime);
-
 
     if (vtransid > 0) then begin
       filelog('DI [%d %s] %s Order exists %d %d %.6g/%d   lastdropat %s',
@@ -501,7 +511,6 @@ begin
             and (avol > 0) and ( (now - aBaseSec^.LastRejTime) > 1 * SecDelay) then begin
         if assigned(OTManager) then OTManager.SetMyOrder(TPId, aBaseSec^.Sec, aBaseSec^.Account, aBuySell, aprice, avol);
       end;
-
 
     end;
 
@@ -579,14 +588,14 @@ function tTP.FullHedging(aBaseSec: pTPSec): boolean;
 var i, vvol   : longint;
     vprice    : real;
     vbuysell  : char;
-    vtransid, vqtytmp : longint;
+    vtransid, vqtytmp, vbaseqty : longint;
     vpricetmp         : real;
     vorderno          : int64;
     vdroptime         : TDateTime;
 begin
 
   result:=  true;
-  CountQtysNeed(aBaseSec);
+  CountQtysNeed(aBaseSec, vbaseqty);
 
   if assigned(TPSecList) then with TPSecList do
   for i:= 0 to Count - 1 do with pTPSec(items[i])^ do if (Sec^.SecType <> 'I') then begin
@@ -622,16 +631,99 @@ begin
 end;
 
 
-procedure tTP.CountQtysNeed(aBaseSec: pTPSec);
-var i, j, vPDToSecId, vqty: longint;
+function tTP.NotFullHedging(aBaseSec: pTPSec): boolean;
+var i, vvol, vbaseqty    : longint;
+    vprice    : real;
+    vbuysell, vordtype            : char;
+    vtransid, vsqtytmp, vbqtytmp  : longint;
+    vspricetmp, vbpricetmp        : real;
+    vsorderno, vborderno          : int64;
+    vsdroptime, vbdroptime        : TDateTime;
+    vordex                        : boolean;
+begin
+
+  result:=  true;
+  CountQtysNeed(aBaseSec, vbaseqty);
+
+  if assigned(TPSecList) then with TPSecList do begin
+
+    for i:= 0 to Count - 1 do with pTPSec(items[i])^ do begin
+        if (TPSecType = 'P') and (gUseHedgePD) and (QtyNeed <> Qty) then result:= false;
+        if (TPSecType = 'H') and (abs(vbaseqty - QtyBaseHedged) > TPParams.Vunhedged) then result:= false;
+    end;
+
+
+    for i:= 0 to Count - 1 do with pTPSec(items[i])^ do
+      if ((TPSecType <> 'H') or ((TPSecType = 'P') and gUseHedgePD)) and (QtyNeed <> Qty) then begin
+        if (QtyNeed > Qty) then begin
+          vvol:=  QtyNeed - Qty; vbuysell:=  'B';
+          if (TPSecType = 'P') then vprice:=  Sec.Params.limitpricehigh
+                  else vprice:=  Sec.Ask.PriceToVol(0) - Sec.TradeParams.PriceStep;
+        end else begin
+          vvol:=  Qty - QtyNeed; vbuysell:=  'S';
+          if (TPSecType = 'P') then vprice:=  Sec.Params.limitpricelow
+                  else vprice:=  Sec.Bid.PriceToVol(0) + Sec.TradeParams.PriceStep;
+        end;
+        FileLog('NotFullHedging [%d %s] %s Qty=%d QtyNeed=%d Vol=%d BS=%s price=%.6g  %s lastrejtime=%s',
+                        [TPId, Name, Sec^.code, Qty, QtyNeed, vvol, vbuysell, vprice,
+                        aBaseSec^.Sec.code, FormatDateTime('dd.mm.yyyy hh:nn:ss.zzz', aBaseSec^.LastRejTime)], 2);
+
+        //  Ищем заявки по данной бумаге
+        vstransid:=  0;
+        if assigned(OTManager) then vstransid:=  OTManager.HasActive('S', TPId, SecId, vspricetmp, vsqtytmp, vsorderno, vsdroptime);
+        vbtransid:=  0;
+        if assigned(OTManager) then vbtransid:=  OTManager.HasActive('B', TPId, SecId, vbpricetmp, vbqtytmp, vborderno, vbdroptime);
+
+        vordex  := false;
+        //  Снимаем заявки, не соответствующие условиям, если такие есть
+        if (vstransid > 0) then begin
+          vordex  :=  true;
+          filelog('NotFullHedging [%d %s] Sell HedgeOrder exists %d %d %.6g/%d lastdrop=%s',
+                        [TPId, Name, vstransid, vsorderno, vspricetmp, vsqtytmp, FormatDateTime('hh:mm:ss.zzz', vsdroptime)], 3);
+          if (TPSecType = 'P') or ((vbuysell <> 'S') or (vprice <> vspricetmp) or (vvol <> vsqtytmp) or (abs(vbaseqty - QtyBaseHedged) > TPParams.Vunhedged)) then
+            if (vsorderno > 0) and ( (now - vsdroptime) > SecDelay) and assigned(OTManager) then OTManager.DropOrder(vstransid, vsorderno, Sec, Account);
+        end;
+
+        if (vbtransid > 0) then begin
+          vordex  :=  true;
+          filelog('NotFullHedging [%d %s] Buy HedgeOrder exists %d %d %.6g/%d lastdrop=%s',
+                        [TPId, Name, vbtransid, vborderno, vbpricetmp, vbqtytmp, FormatDateTime('hh:mm:ss.zzz', vbdroptime)], 3);
+          if ((vbuysell <> 'B') or (vprice <> vbpricetmp) or (vvol <> vbqtytmp) or (abs(vbaseqty - QtyBaseHedged) > TPParams.Vunhedged)) then
+            if (vborderno > 0) and ( (now - vsdroptime) > SecDelay) and assigned(OTManager) then OTManager.DropOrder(vstransid, vborderno, Sec, Account);
+        end;
+
+        vordtype  :=  'V';
+        if not vordex and (vvol > 0) then begin
+          if (TPSecType <> 'P') and (abs(vbaseqty - QtyBaseHedged) > TPParams.Vunhedged)) then begin
+            vvol  :=  round(vvol * TPParams.Kunhedged); vordtype  :=  'M';
+            filelog('NotFullHedging [%d %s] % unhedged. Vol for market = %d',
+                        [TPId, Name, Sec^.code, vvol], 3);
+          end;
+          if (TPSecType = 'P') then vordtype  :=  'M';
+          if assigned(OTManager) then OTManager.SetMyOrder(TPId, Sec, Account, vbuysell, vprice, vvol, vordtype);
+        end;
+
+      end;
+
+
+  end;
+
+end;
+
+
+
+
+
+procedure tTP.CountQtysNeed(aBaseSec: pTPSec; var aBaseQty : longint);
+var i, j, vPDToSecId, vqty, vbaseqty: longint;
 
 begin
-  vPDToSecId:=  0; vqty:= 0;
+  vPDToSecId:=  0; vqty:= 0; vbaseqty := 0;
   if assigned(TPSecList) then with TPSecList do begin
     for i:= 0 to Count - 1 do with pTPSec(items[i])^ do begin
       if TPSecType = 'H' then QtyNeed:= -Round(aBaseSec^.Qty * Hedge_Kf);
       if TPSecType = 'R' then QtyNeed:= Round(aBaseSec^.Qty * Hedge_Kf);
-      if (TPSecType = 'B') or (TPSecType = 'C') then QtyNeed:= Qty;
+      if (TPSecType = 'B') or (TPSecType = 'C') then begin QtyNeed:= Qty; vbaseqty := Qty; end;
       FileLog('MTS3LX_TP. CountQtysNeed [%d %s] %s QtyNeed=%d Qty=%d  %s)', [TPId, Name, Sec^.code, QtyNeed, Qty, TPSecType], 4);
     end;
     for i:= 0 to Count - 1 do with pTPSec(items[i])^ do begin
@@ -640,10 +732,12 @@ begin
         with TPSecList do for j:= 0 to Count - 1 do with pTPSec(items[j])^ do if SecId = vPDToSecId then vqty:= QtyNeed;
         QtyNeed :=  -Round(vqty * Hedge_Kf);
       end;
-      FileLog('MTS3LX_TP. CountQtysNeed [%d %s] %s QtyNeed=%d Qty=%d  %s (%d %d)',
-                        [TPId, Name, Sec^.code, QtyNeed, Qty, TPSecType, vPDToSecId, vqty], 4);
+      if (TPSecType = 'H') and (Hedge_Kf <> 0) then QtyBaseHedged := -Round(vbaseqty / Hedge_Kf) else QtyBaseHedged := 0;
+      FileLog('MTS3LX_TP. CountQtysNeed [%d %s] %s QtyNeed=%d Qty=%d QtyBaseHedged=%d  %s (%d %d)',
+                        [TPId, Name, Sec^.code, QtyNeed, Qty, QtyBaseHedged, TPSecType, vPDToSecId, vqty], 4);
     end;
- end;
+  end;
+  aBaseQty := vbaseqty;
 
 end;
 

@@ -107,7 +107,6 @@ begin
     if (PQresultStatus(res) = PGRES_TUPLES_OK) then for i := 0 to PQntuples(res)-1 do begin
       SL :=  QueryResult(PQgetvalue(res, i, 0));
       if SL.Count > 4 then begin
-
         Result    :=  StrToIntDef(SL[0], 0);
         aprice    :=  StrToFloatDef(SL[1], 0);
         aquantity :=  StrToIntDef(SL[2], 0);
