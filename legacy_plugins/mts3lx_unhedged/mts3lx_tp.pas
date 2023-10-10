@@ -635,7 +635,7 @@ function tTP.NotFullHedging(aBaseSec: pTPSec): boolean;
 var i, vvol, vbaseqty    : longint;
     vprice    : real;
     vbuysell, vordtype            : char;
-    vtransid, vsqtytmp, vbqtytmp  : longint;
+    vstransid, vbtransid, vsqtytmp, vbqtytmp  : longint;
     vspricetmp, vbpricetmp        : real;
     vsorderno, vborderno          : int64;
     vsdroptime, vbdroptime        : TDateTime;
@@ -694,7 +694,7 @@ begin
 
         vordtype  :=  'V';
         if not vordex and (vvol > 0) then begin
-          if (TPSecType <> 'P') and (abs(vbaseqty - QtyBaseHedged) > TPParams.Vunhedged)) then begin
+          if (TPSecType <> 'P') and (abs(vbaseqty - QtyBaseHedged) > TPParams.Vunhedged) then begin
             vvol  :=  round(vvol * TPParams.Kunhedged); vordtype  :=  'M';
             filelog('NotFullHedging [%d %s] % unhedged. Vol for market = %d',
                         [TPId, Name, Sec^.code, vvol], 3);
