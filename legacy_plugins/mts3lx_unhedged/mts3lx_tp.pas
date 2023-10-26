@@ -632,7 +632,7 @@ end;
 
 
 function tTP.NotFullHedging(aBaseSec: pTPSec): boolean;
-var i, vvol, vbaseqty    : longint;
+var i, vvol, vbaseqty, vvolm   : longint;
     vprice    : real;
     vbuysell, vordtype            : char;
     vstransid, vbtransid, vsqtytmp, vbqtytmp  : longint;
@@ -642,6 +642,7 @@ var i, vvol, vbaseqty    : longint;
     vordex                        : boolean;
 begin
 
+  FileLog('NotFullHedging start %s', [aBaseSec^.Sec^.code], 3);
   result:=  true;
   CountQtysNeed(aBaseSec, vbaseqty);
 
@@ -654,7 +655,7 @@ begin
 
 
     for i:= 0 to Count - 1 do with pTPSec(items[i])^ do
-      if ((TPSecType <> 'H') or ((TPSecType = 'P') and gUseHedgePD)) and (QtyNeed <> Qty) then begin
+      if ((TPSecType = 'H') or ((TPSecType = 'P') and gUseHedgePD)) and (QtyNeed <> Qty) then begin
         if (QtyNeed > Qty) then begin
           vvol:=  QtyNeed - Qty; vbuysell:=  'B';
           if (TPSecType = 'P') then vprice:=  Sec.Params.limitpricehigh
@@ -689,15 +690,18 @@ begin
           filelog('NotFullHedging [%d %s] Buy HedgeOrder exists %d %d %.6g/%d lastdrop=%s',
                         [TPId, Name, vbtransid, vborderno, vbpricetmp, vbqtytmp, FormatDateTime('hh:mm:ss.zzz', vbdroptime)], 3);
           if ((vbuysell <> 'B') or (vprice <> vbpricetmp) or (vvol <> vbqtytmp) or (abs(vbaseqty - QtyBaseHedged) > TPParams.Vunhedged)) then
-            if (vborderno > 0) and ( (now - vsdroptime) > SecDelay) and assigned(OTManager) then OTManager.DropOrder(vstransid, vborderno, Sec, Account);
+            if (vborderno > 0) and ( (now - vbdroptime) > SecDelay) and assigned(OTManager) then OTManager.DropOrder(vbtransid, vborderno, Sec, Account);
         end;
 
         vordtype  :=  'V';
         if not vordex and (vvol > 0) then begin
+          filelog('NotFullHedging [%d %s] %s (%s) unhedged. Vol base=%d bh=%d Vunh=%d   Diff=%d',
+                  [TPId, Name, Sec^.code, TPSecType, vbaseqty, QtyBaseHedged, TPParams.Vunhedged, abs(vbaseqty - QtyBaseHedged)], 3);
           if (TPSecType <> 'P') and (abs(vbaseqty - QtyBaseHedged) > TPParams.Vunhedged) then begin
-            vvol  :=  round(vvol * TPParams.Kunhedged); vordtype  :=  'M';
-            filelog('NotFullHedging [%d %s] % unhedged. Vol for market = %d',
-                        [TPId, Name, Sec^.code, vvol], 3);
+            vordtype  :=  'M';
+            vvolm  :=  round(vvol * TPParams.Kunhedged);
+            if (vvolm > 0) then vvol := vvolm else vvol := 1;
+            filelog('NotFullHedging [%d %s] %s unhedged. Vol for market = %d', [TPId, Name, Sec^.code, vvol], 3);
           end;
           if (TPSecType = 'P') then vordtype  :=  'M';
           if assigned(OTManager) then OTManager.SetMyOrder(TPId, Sec, Account, vbuysell, vprice, vvol, vordtype);
@@ -724,7 +728,7 @@ begin
       if TPSecType = 'H' then QtyNeed:= -Round(aBaseSec^.Qty * Hedge_Kf);
       if TPSecType = 'R' then QtyNeed:= Round(aBaseSec^.Qty * Hedge_Kf);
       if (TPSecType = 'B') or (TPSecType = 'C') then begin QtyNeed:= Qty; vbaseqty := Qty; end;
-      FileLog('MTS3LX_TP. CountQtysNeed [%d %s] %s QtyNeed=%d Qty=%d  %s)', [TPId, Name, Sec^.code, QtyNeed, Qty, TPSecType], 4);
+      FileLog('MTS3LX_TP. CountQtysNeed [%d %s] %s QtyNeed=%d Qty=%d  %s', [TPId, Name, Sec^.code, QtyNeed, Qty, TPSecType], 4);
     end;
     for i:= 0 to Count - 1 do with pTPSec(items[i])^ do begin
       if TPSecType = 'P' then begin
@@ -732,9 +736,9 @@ begin
         with TPSecList do for j:= 0 to Count - 1 do with pTPSec(items[j])^ do if SecId = vPDToSecId then vqty:= QtyNeed;
         QtyNeed :=  -Round(vqty * Hedge_Kf);
       end;
-      if (TPSecType = 'H') and (Hedge_Kf <> 0) then QtyBaseHedged := -Round(vbaseqty / Hedge_Kf) else QtyBaseHedged := 0;
+      if (TPSecType = 'H') and (Hedge_Kf <> 0) then QtyBaseHedged := -Round(Qty / Hedge_Kf) else QtyBaseHedged := 0;
       FileLog('MTS3LX_TP. CountQtysNeed [%d %s] %s QtyNeed=%d Qty=%d QtyBaseHedged=%d  %s (%d %d)',
-                        [TPId, Name, Sec^.code, QtyNeed, Qty, QtyBaseHedged, TPSecType, vPDToSecId, vqty], 4);
+                        [TPId, Name, Sec^.code, QtyNeed, Qty, QtyBaseHedged, TPSecType, vPDToSecId, vqty], 3);
     end;
   end;
   aBaseQty := vbaseqty;
