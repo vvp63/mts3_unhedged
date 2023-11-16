@@ -679,17 +679,19 @@ begin
         //  Снимаем заявки, не соответствующие условиям, если такие есть
         if (vstransid > 0) then begin
           vordex  :=  true;
-          filelog('NotFullHedging [%d %s] Sell HedgeOrder exists %d %d %.6g/%d lastdrop=%s',
-                        [TPId, Name, vstransid, vsorderno, vspricetmp, vsqtytmp, FormatDateTime('hh:mm:ss.zzz', vsdroptime)], 3);
-          if (TPSecType = 'P') or ((vbuysell <> 'S') or (vprice <> vspricetmp) or (vvol <> vsqtytmp) or (abs(vbaseqty - QtyBaseHedged) > TPParams.Vunhedged)) then
+          filelog('NotFullHedging [%d %s] Sell (%s) HedgeOrder exists %d %d %.6g/%d (need %.6g/%d) (%d %d %d) lastdrop=%s',
+                        [TPId, Name, vbuysell, vstransid, vsorderno, vspricetmp, vsqtytmp, vprice, vvol,
+                         vbaseqty, QtyBaseHedged, TPParams.Vunhedged, FormatDateTime('hh:mm:ss.zzz', vsdroptime)], 3);
+          if (TPSecType = 'P') or ((vbuysell <> 'S') or (abs(vprice - vspricetmp) > 1e-10) or (vvol <> vsqtytmp) or (abs(vbaseqty - QtyBaseHedged) > TPParams.Vunhedged)) then
             if (vsorderno > 0) and ( (now - vsdroptime) > SecDelay) and assigned(OTManager) then OTManager.DropOrder(vstransid, vsorderno, Sec, Account);
         end;
 
         if (vbtransid > 0) then begin
           vordex  :=  true;
-          filelog('NotFullHedging [%d %s] Buy HedgeOrder exists %d %d %.6g/%d lastdrop=%s',
-                        [TPId, Name, vbtransid, vborderno, vbpricetmp, vbqtytmp, FormatDateTime('hh:mm:ss.zzz', vbdroptime)], 3);
-          if ((vbuysell <> 'B') or (vprice <> vbpricetmp) or (vvol <> vbqtytmp) or (abs(vbaseqty - QtyBaseHedged) > TPParams.Vunhedged)) then
+          filelog('NotFullHedging [%d %s] Buy (%s) HedgeOrder exists %d %d %.6g/%d (need %.6g/%d) (%d %d %d) lastdrop=%s',
+                        [TPId, Name, vbuysell, vbtransid, vborderno, vbpricetmp, vbqtytmp, vprice, vvol,
+                         vbaseqty, QtyBaseHedged, TPParams.Vunhedged, FormatDateTime('hh:mm:ss.zzz', vbdroptime)], 3);
+          if (TPSecType = 'P') or ((vbuysell <> 'B') or (abs(vprice - vbpricetmp) > 1e-10) or (vvol <> vbqtytmp) or (abs(vbaseqty - QtyBaseHedged) > TPParams.Vunhedged)) then
             if (vborderno > 0) and ( (now - vbdroptime) > SecDelay) and assigned(OTManager) then OTManager.DropOrder(vbtransid, vborderno, Sec, Account);
         end;
 
