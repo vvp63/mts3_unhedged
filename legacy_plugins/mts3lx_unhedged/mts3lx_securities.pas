@@ -270,7 +270,7 @@ end;
 
 procedure tSec.LogQuotes;
 var vas, vbs  : string;
-    vbia  : boolean;
+  //  vbia  : boolean;
 begin
   if assigned(Ask) then vas:= Ask.GetLog else vas:= '';
   if assigned(Bid) then vbs:= Bid.GetLog else vbs:= '';

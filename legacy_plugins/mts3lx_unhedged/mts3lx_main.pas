@@ -93,7 +93,7 @@ end;
 //  DB functions
 
 function  MTS3_DBConnect: longint; stdcall;
-var vParamValue : string;
+var //vParamValue : string;
     pghost,pgport,pgoptions,pgtty,dbname,login,pwd : Pchar;
     vUserCount, i  : longint;
 begin

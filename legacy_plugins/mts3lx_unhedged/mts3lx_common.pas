@@ -208,7 +208,7 @@ end;
 
 function QueryResult(const aRes : string) : tStringList;
 var vStr  : string;
-    i, vp : longint;
+    vp : longint;
     fl    : boolean;
 begin
   result    :=  tStringList.Create;

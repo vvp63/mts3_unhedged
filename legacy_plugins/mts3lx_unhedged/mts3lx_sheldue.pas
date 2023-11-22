@@ -110,7 +110,7 @@ end;
 procedure tScheldueList.LoadScheldue;
 var vpscheldue  : pScheldueItem;
     res : PPGresult;
-    i, j    : longint;
+    i    : longint;
     SL      : tStringList;
 begin
   FileLog('MTS3LX_SHELDUE. LoadScheldue');

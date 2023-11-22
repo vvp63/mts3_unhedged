@@ -52,8 +52,8 @@ exports   getDllAPI               name 'getDllAPI',
           ProcessUserCommand      name 'PLG_ProcessUserCommand';
 
 
-var command : string  = '';
-    quit    : boolean = false;
+{var command : string  = '';
+    quit    : boolean = false;  }
 
 begin
 

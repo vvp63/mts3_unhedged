@@ -703,6 +703,8 @@ begin
             vordtype  :=  'M';
             vvolm  :=  round(vvol * TPParams.Kunhedged);
             if (vvolm > 0) then vvol := vvolm else vvol := 1;
+            if (Sec.SecType = 'F') and (vbuysell = 'B') then vprice:=  Sec.Params.limitpricehigh;
+            if (Sec.SecType = 'F') and (vbuysell = 'S') then vprice:=  Sec.Params.limitpricelow;
             filelog('NotFullHedging [%d %s] %s unhedged. Vol for market = %d', [TPId, Name, Sec^.code, vvol], 3);
           end;
           if (TPSecType = 'P') then vordtype  :=  'M';
