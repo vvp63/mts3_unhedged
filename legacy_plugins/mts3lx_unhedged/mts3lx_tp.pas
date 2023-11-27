@@ -103,6 +103,8 @@ type tTP = class(TObject)
         LastRehPDTime     : TDateTime;      //  Время последнего рехеджа долларом
         LastRehPortfTime  : TDateTime;      //  Время последнего рехеджа портфеля
 
+        PDHedgeActive     : boolean;
+
 
         constructor create(aid : longint; const aname  : string); overload;
       public
@@ -404,6 +406,19 @@ begin
   if (PDReloadKfCommand = TPId) then begin
     ReLoadSecListKf;
     PDReloadKfCommand :=  0;
+    msglog(fromid, fromuser, 'HedgeKf for TP %d reloaded', [TPId]);
+  end;
+
+  if (StartHedgePDCommand = TPId) then begin
+    PDHedgeActive     :=  true;
+    StartHedgePDCommand :=  0;
+    msglog(fromid, fromuser, 'Started PD hedge for TP %d', [TPId]);
+  end;
+
+  if (StopHedgePDCommand = TPId) then begin
+    PDHedgeActive     :=  false;
+    StopHedgePDCommand :=  0;
+    msglog(fromid, fromuser, 'Stoped PD hedge for TP %d', [TPId]);
   end;
 
   //  Забираем новые усредненные коэффициенты
@@ -599,7 +614,7 @@ begin
 
   if assigned(TPSecList) then with TPSecList do
   for i:= 0 to Count - 1 do with pTPSec(items[i])^ do if (Sec^.SecType <> 'I') then begin
-    if (QtyNeed <> Qty) and (TPSecType <> 'B') and (TPSecType <> 'C') and ((TPSecType <> 'P') OR gUseHedgePD) then begin
+    if (QtyNeed <> Qty) and (TPSecType <> 'B') and (TPSecType <> 'C') and ((TPSecType <> 'P') OR PDHedgeActive) then begin
       if (QtyNeed > Qty) then begin
         vvol:=  QtyNeed - Qty; vbuysell:=  'B'; vprice:=  Sec.Ask.PriceToVol(vvol);
         if (Sec.SecType = 'F') and (TPParams.HedgeMode = 'M') then vprice:=  Sec.Params.limitpricehigh;
@@ -649,13 +664,13 @@ begin
   if assigned(TPSecList) then with TPSecList do begin
 
     for i:= 0 to Count - 1 do with pTPSec(items[i])^ do begin
-        if (TPSecType = 'P') and (gUseHedgePD) and (QtyNeed <> Qty) then result:= false;
+        if (TPSecType = 'P') and (PDHedgeActive) and (QtyNeed <> Qty) then result:= false;
         if (TPSecType = 'H') and (abs(vbaseqty - QtyBaseHedged) > TPParams.Vunhedged) then result:= false;
     end;
 
 
     for i:= 0 to Count - 1 do with pTPSec(items[i])^ do
-      if ((TPSecType = 'H') or ((TPSecType = 'P') and gUseHedgePD)) and (QtyNeed <> Qty) then begin
+      if ((TPSecType = 'H') or ((TPSecType = 'P') and PDHedgeActive)) and (QtyNeed <> Qty) then begin
         if (QtyNeed > Qty) then begin
           vvol:=  QtyNeed - Qty; vbuysell:=  'B';
           if (TPSecType = 'P') then vprice:=  Sec.Params.limitpricehigh
@@ -1118,6 +1133,8 @@ begin
 
       LastRehPDTime     :=  vDayBegin;
       LastRehPortfTime  :=  vDayBegin;
+
+      PDHedgeActive     :=  true;
 
       LoadSecList;
       LoadParams;

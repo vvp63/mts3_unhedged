@@ -60,6 +60,8 @@ const
 
 const
       PDReloadKfCommand         : longint       = 0;
+      StartHedgePDCommand       : longint       = 0;
+      StopHedgePDCommand        : longint       = 0;
 
 const
   DefaultToId               : string        = '';
