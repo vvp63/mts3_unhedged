@@ -406,19 +406,19 @@ begin
   if (PDReloadKfCommand = TPId) then begin
     ReLoadSecListKf;
     PDReloadKfCommand :=  0;
-    msglog(fromid, fromuser, 'HedgeKf for TP %d reloaded', [TPId]);
+    msglog(TmpFromid, TmpFromuser, 'HedgeKf for TP %d reloaded', [TPId]);
   end;
 
   if (StartHedgePDCommand = TPId) then begin
     PDHedgeActive     :=  true;
     StartHedgePDCommand :=  0;
-    msglog(fromid, fromuser, 'Started PD hedge for TP %d', [TPId]);
+    msglog(TmpFromid, TmpFromuser, 'Started PD hedge for TP %d', [TPId]);
   end;
 
   if (StopHedgePDCommand = TPId) then begin
     PDHedgeActive     :=  false;
     StopHedgePDCommand :=  0;
-    msglog(fromid, fromuser, 'Stoped PD hedge for TP %d', [TPId]);
+    msglog(TmpFromid, TmpFromuser, 'Stoped PD hedge for TP %d', [TPId]);
   end;
 
   //  Забираем новые усредненные коэффициенты

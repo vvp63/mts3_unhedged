@@ -271,6 +271,8 @@ begin
 
       if (paramlow[0] = 'starthedgepd') then begin
         StartHedgePDCommand  :=  StrToIntDef(paramlow[1], 0);
+        TmpFromuser :=  fromuser;
+        TmpFromid   :=  fromid;
 
         {gUseHedgePD := true;
         FileLog('MTS_ParseCommand starthedgepd', [], 1);
@@ -279,6 +281,8 @@ begin
 
       if (paramlow[0] = 'stophedgepd') then begin
         StopHedgePDCommand  :=  StrToIntDef(paramlow[1], 0);
+        TmpFromuser :=  fromuser;
+        TmpFromid   :=  fromid;
 
         {gUseHedgePD  :=  false;
         FileLog('MTS_ParseCommand stophedgepd', [], 1);
@@ -286,22 +290,10 @@ begin
       end;
 
 
-
-      {
-      if (paramlow[0] = 'rehedgepd') then begin
-        PDRehedgeCommand  :=  StrToIntDef(paramlow[1], 0);
-        msglog(fromid, fromuser, 'Rehedging PD in %d', [PDRehedgeCommand]);
-      end;
-
-      if (paramlow[0] = 'usepdrehedge') then begin
-        vrelcode  :=  StrToIntDef(paramlow[1], 0);
-        if vrelcode <> 1 then vrelcode  :=  0;
-        if (vrelcode = 1) then UsePDRehedge := true else UsePDRehedge := false;
-        msglog(fromid, fromuser, 'Rehedging PD status %d', [vrelcode]);
-      end;
-      }
       if (paramlow[0] = 'reloadpdkf') then begin
         PDReloadKfCommand  :=  StrToIntDef(paramlow[1], 0);
+        TmpFromuser :=  fromuser;
+        TmpFromid   :=  fromid;
         //msglog(fromid, fromuser, 'Reloading HedgeKf for TP %d', [PDReloadKfCommand]);
       end;
       

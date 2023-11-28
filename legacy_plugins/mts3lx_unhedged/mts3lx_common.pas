@@ -63,6 +63,9 @@ const
       StartHedgePDCommand       : longint       = 0;
       StopHedgePDCommand        : longint       = 0;
 
+      TmpFromuser               : string        = '';
+      TmpFromid                 : string        = '';
+
 const
   DefaultToId               : string        = '';
 
