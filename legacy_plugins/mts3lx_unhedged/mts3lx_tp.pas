@@ -455,7 +455,7 @@ begin
   if TPSecList.GetBaseSec(vBaseSec) and assigned(vBaseSec) then begin
 
     if gGlobalHedgeStatus and vinday then begin
-      if (TPParams.HedgeMode <> 'N') then vfullhedged:= FullHedging(vBaseSec) else vfullhedged:= NotFullHedging(vBaseSec);
+      if (TPParams.HedgeMode <> 'N') or (not vactinday) then vfullhedged:= FullHedging(vBaseSec) else vfullhedged:= NotFullHedging(vBaseSec);
     end else vfullhedged:= false;
 
     FileLog('Q gtss=%s ghs=%s id=%s ida=%s HM=%s fh=%s',
