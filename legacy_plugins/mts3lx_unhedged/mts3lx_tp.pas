@@ -42,13 +42,15 @@ type  pTPSec  = ^tTPSec;
         QtyNeed         : longint;
         QtyBaseHedged   : longint;  //  Количество базового актива реально захеджированного данной бумагой
         //  Время последнего реджекта с биржи по бумаге
-        LastRejTime : TDateTime;
+        LastRejTime   : TDateTime;
         //  По усреднению
-        HasAvgVal   : boolean;
-        AvgVal      : real;
-        AvgKf       : real;
-        AvgMaxDiff  : real;
-        AvgMinDiff  : real;
+        HasAvgVal     : boolean;
+        AvgVal        : real;
+        AvgKf         : real;
+        AvgMaxDiff    : real;
+        AvgMinDiff    : real;
+        //  Последнее время заявки по бумаге
+        LastOrderTime : TDateTime;
 end;
 
 
@@ -74,6 +76,8 @@ type tTPTradeParams  = record
         HedgeMode       : char;
         Vunhedged       : longint;
         Kunhedged       : real;
+        MMaxVol         : longint;    //  Максимальный объем хеджирования в рынок в терминах базового контракта
+        MOrderDelay     : longint;    //  Задержка в секундах между хеджированием в маркет
         CashShift       : real;
         RIntPD          : longint;
         RIntPortf       : longint;
@@ -380,6 +384,9 @@ begin
         Vunhedged       :=  StrToIntDef(SL[23], 0);
         Kunhedged       :=  StrToFloatDef(SL[24], 0);
 
+        MMaxVol         :=  StrToIntDef(SL[25], 0);
+        MOrderDelay     :=  StrToIntDef(SL[26], 0);
+
       end;
     end;
 
@@ -607,6 +614,7 @@ var i, vvol   : longint;
     vpricetmp         : real;
     vorderno          : int64;
     vdroptime         : TDateTime;
+    vmaxvol           : longint;
 begin
 
   result:=  true;
@@ -626,6 +634,13 @@ begin
                       [TPId, Name, Sec^.code, Qty, QtyNeed, vvol, vbuysell, vprice,
                       aBaseSec^.Sec.code, FormatDateTime('dd.mm.yyyy hh:nn:ss.zzz', aBaseSec^.LastRejTime)], 2);
       vtransid:=  0;
+      if (TPParams.MMaxVol > 0) and (vvol > 0) then begin
+          //  Ограничиваем объем заявки
+        vmaxvol :=  max(round(TPParams.MMaxVol * Hedge_kf), 1);
+        if (vvol > vmaxvol) then vvol := vmaxvol;
+        FileLog('FullHedging [%d %s] %s   MaxVolLimit = %d (%d %.6g) Vol=%d',
+                      [TPId, Name, Sec^.code, vmaxvol, TPParams.MMaxVol, Hedge_kf, vvol], 3);
+      end;
 
 
       if assigned(OTManager) then vtransid:=  OTManager.HasActive(vbuysell, TPId, SecId, vpricetmp, vqtytmp, vorderno, vdroptime);
@@ -635,7 +650,14 @@ begin
         if (vorderno > 0) and ( (now - vdroptime) > 2 * SecDelay) and assigned(OTManager) then OTManager.DropOrder(vtransid, vorderno, Sec, Account);
       end else begin
        // if TPParams.HedgeMode = 'M' then vmarket:=  true else vmarket:= false;
-        if ( (now - aBaseSec^.LastRejTime) > 2 * SecDelay) and assigned(OTManager) then OTManager.SetMyOrder(TPId, Sec, Account, vBuySell, vprice, vvol, TPParams.HedgeMode);
+        if (TPParams.MOrderDelay > 0) and (now - aBaseSec^.LastOrderTime < TPParams.MOrderDelay * SecDelay) then begin
+          FileLog('FullHedging [%d %s] %s   Limit by time (%d sec). Last time = %s',
+                      [TPId, Name, Sec^.code, TPParams.MOrderDelay, FormatDateTime('hh:mm:ss.zzz', LastOrderTime)], 3);
+        end else begin
+          if ( (now - aBaseSec^.LastRejTime) > 2 * SecDelay) and assigned(OTManager) then OTManager.SetMyOrder(TPId, Sec, Account, vBuySell, vprice, vvol, TPParams.HedgeMode);
+          LastOrderTime :=  now;
+        end;
+
       end;
       result:=  false;
 
@@ -727,7 +749,6 @@ begin
         end;
 
       end;
-
 
   end;
 
